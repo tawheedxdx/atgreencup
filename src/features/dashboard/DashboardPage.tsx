@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, Variants } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { useDashboardStore } from '../../store/dashboardStore';
-import { getTodayProductionStats, getEntriesByOperator } from '../../services/entries.service';
+import { getTodayProductionStats, getMonthProductionStats, getEntriesByOperator } from '../../services/entries.service';
 import { SummaryCard } from '../../components/ui/SummaryCard';
 import { EntryCard } from '../../components/ui/EntryCard';
 import { Button } from '../../components/ui/Button';
@@ -27,7 +27,11 @@ const itemVariants: Variants = {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuthStore();
-  const { boxTotal, pcsTotal, approvedBox, approvedPcs, loading: statsLoading, setStats, setLoading } = useDashboardStore();
+  const { 
+    boxTotal, pcsTotal, approvedBox, approvedPcs, 
+    monthBoxTotal, monthPcsTotal,
+    loading: statsLoading, setStats, setLoading 
+  } = useDashboardStore();
   const [recentEntries, setRecentEntries] = useState<ProductionEntry[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
 
@@ -37,11 +41,12 @@ export const DashboardPage: React.FC = () => {
       setLoading(true);
       setLoadingRecent(true);
       try {
-        const [stats, entries] = await Promise.all([
+        const [todayStats, monthStats, entries] = await Promise.all([
           getTodayProductionStats(profile.uid),
+          getMonthProductionStats(profile.uid),
           getEntriesByOperator(profile.uid),
         ]);
-        setStats(stats);
+        setStats({ ...todayStats, ...monthStats });
         setRecentEntries(entries.slice(0, 5));
       } catch (err) {
         console.error('Dashboard fetch error:', err);
@@ -164,6 +169,52 @@ export const DashboardPage: React.FC = () => {
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  }
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </section>
+
+        {/* Monthly Summary */}
+        <section className="mt-8">
+          <motion.h2 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+            className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 px-1"
+          >
+            This Month's Production
+          </motion.h2>
+          
+          {statsLoading ? (
+            <LoadingView message="Loading stats..." />
+          ) : (
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-2 gap-3"
+            >
+              <motion.div variants={itemVariants}>
+                <SummaryCard
+                  title="Monthly BOX"
+                  value={monthBoxTotal}
+                  color="#6366F1"
+                  icon={
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  }
+                />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <SummaryCard
+                  title="Monthly PCS"
+                  value={monthPcsTotal}
+                  color="#EC4899"
+                  icon={
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   }
                 />

@@ -37,6 +37,30 @@ export const getEntryById = async (id: string): Promise<ProductionEntry | null> 
   return { id: snap.id, ...snap.data() } as ProductionEntry;
 };
 
+export const getMonthProductionStats = async (uid: string): Promise<{ 
+  boxTotal: number; 
+  pcsTotal: number; 
+}> => {
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthTs = Timestamp.fromDate(monthStart);
+
+  const q = query(
+    entriesCol,
+    where('operatorUid', '==', uid),
+    where('submittedAt', '>=', monthTs),
+    orderBy('submittedAt', 'desc')
+  );
+  const snap = await getDocs(q);
+  const entries = snap.docs.map(d => d.data() as ProductionEntry);
+  
+  return {
+    boxTotal: entries.reduce((acc, curr) => acc + (curr.quantity || 0), 0),
+    pcsTotal: entries.reduce((acc, curr) => acc + (curr.quantity2 || 0), 0),
+  };
+};
+
 export const getTodayProductionStats = async (uid: string): Promise<{ 
   boxTotal: number; 
   pcsTotal: number; 
