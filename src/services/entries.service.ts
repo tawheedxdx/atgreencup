@@ -37,7 +37,12 @@ export const getEntryById = async (id: string): Promise<ProductionEntry | null> 
   return { id: snap.id, ...snap.data() } as ProductionEntry;
 };
 
-export const getTodayEntriesCount = async (uid: string): Promise<{ total: number; pending: number; approved: number; rejected: number }> => {
+export const getTodayProductionStats = async (uid: string): Promise<{ 
+  boxTotal: number; 
+  pcsTotal: number; 
+  approvedBox: number; 
+  approvedPcs: number; 
+}> => {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayTs = Timestamp.fromDate(todayStart);
@@ -49,12 +54,15 @@ export const getTodayEntriesCount = async (uid: string): Promise<{ total: number
     orderBy('submittedAt', 'desc')
   );
   const snap = await getDocs(q);
-  const entries = snap.docs.map(d => d.data());
+  const entries = snap.docs.map(d => d.data() as ProductionEntry);
+  
+  const approvedEntries = entries.filter(e => e.status === 'approved');
+
   return {
-    total: entries.length,
-    pending: entries.filter(e => e.status === 'pending').length,
-    approved: entries.filter(e => e.status === 'approved').length,
-    rejected: entries.filter(e => e.status === 'rejected' || e.status === 'correction_requested').length,
+    boxTotal: entries.reduce((acc, curr) => acc + (curr.quantity || 0), 0),
+    pcsTotal: entries.reduce((acc, curr) => acc + (curr.quantity2 || 0), 0),
+    approvedBox: approvedEntries.reduce((acc, curr) => acc + (curr.quantity || 0), 0),
+    approvedPcs: approvedEntries.reduce((acc, curr) => acc + (curr.quantity2 || 0), 0),
   };
 };
 

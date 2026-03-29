@@ -1,20 +1,20 @@
 import { create } from 'zustand';
 
 interface DashboardState {
-  total: number;
-  pending: number;
-  approved: number;
-  rejected: number;
+  boxTotal: number;
+  pcsTotal: number;
+  approvedBox: number;
+  approvedPcs: number;
   loading: boolean;
-  setStats: (stats: { total: number; pending: number; approved: number; rejected: number }) => void;
+  setStats: (stats: { boxTotal: number; pcsTotal: number; approvedBox: number; approvedPcs: number }) => void;
   setLoading: (loading: boolean) => void;
 }
 
 export const useDashboardStore = create<DashboardState>((set) => ({
-  total: 0,
-  pending: 0,
-  approved: 0,
-  rejected: 0,
+  boxTotal: 0,
+  pcsTotal: 0,
+  approvedBox: 0,
+  approvedPcs: 0,
   loading: true,
   setStats: (stats) => set({ ...stats, loading: false }),
   setLoading: (loading) => set({ loading }),

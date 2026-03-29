@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, Variants } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { useDashboardStore } from '../../store/dashboardStore';
-import { getTodayEntriesCount, getEntriesByOperator } from '../../services/entries.service';
+import { getTodayProductionStats, getEntriesByOperator } from '../../services/entries.service';
 import { SummaryCard } from '../../components/ui/SummaryCard';
 import { EntryCard } from '../../components/ui/EntryCard';
 import { Button } from '../../components/ui/Button';
@@ -27,7 +27,7 @@ const itemVariants: Variants = {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuthStore();
-  const { total, pending, approved, rejected, loading: statsLoading, setStats, setLoading } = useDashboardStore();
+  const { boxTotal, pcsTotal, approvedBox, approvedPcs, loading: statsLoading, setStats, setLoading } = useDashboardStore();
   const [recentEntries, setRecentEntries] = useState<ProductionEntry[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
 
@@ -38,7 +38,7 @@ export const DashboardPage: React.FC = () => {
       setLoadingRecent(true);
       try {
         const [stats, entries] = await Promise.all([
-          getTodayEntriesCount(profile.uid),
+          getTodayProductionStats(profile.uid),
           getEntriesByOperator(profile.uid),
         ]);
         setStats(stats);
@@ -108,7 +108,7 @@ export const DashboardPage: React.FC = () => {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
             className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 px-1"
           >
-            Today's Summary
+            Today's Sum (Production)
           </motion.h2>
           
           {statsLoading ? (
@@ -122,32 +122,32 @@ export const DashboardPage: React.FC = () => {
             >
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Total"
-                  value={total}
+                  title="Today's BOX"
+                  value={boxTotal}
                   color="#3B82F6"
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                   }
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Pending"
-                  value={pending}
+                  title="Today's PCS"
+                  value={pcsTotal}
                   color="#F59E0B"
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   }
                 />
               </motion.div>
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Approved"
-                  value={approved}
+                  title="Approved BOX"
+                  value={approvedBox}
                   color="#10B981"
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,12 +158,12 @@ export const DashboardPage: React.FC = () => {
               </motion.div>
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Rejected"
-                  value={rejected}
-                  color="#EF4444"
+                  title="Approved PCS"
+                  value={approvedPcs}
+                  color="#8B5CF6"
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   }
                 />
