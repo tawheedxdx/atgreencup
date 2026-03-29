@@ -7,6 +7,15 @@ import type { ProductionEntry, Product, Machine, Unit, Shift } from '../types';
 
 const entriesCol = collection(db, 'entries');
 
+// ─── Helpers ────────────────────────────────────────────────
+const getTodayLoc = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 // ─── Create ──────────────────────────────────────────────────
 export const createEntry = async (
   data: Omit<ProductionEntry, 'id' | 'status' | 'submittedAt' | 'updatedAt' | 'approvedAt' | 'approvedBy' | 'rejectionReason' | 'correctionMessage'>
@@ -41,19 +50,12 @@ export const getMonthProductionStats = async (uid: string): Promise<{
   monthBoxTotal: number; 
   monthPcsTotal: number; 
 }> => {
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
-  const monthTs = Timestamp.fromDate(monthStart);
-
-  const q = query(
-    entriesCol,
-    where('operatorUid', '==', uid),
-    where('submittedAt', '>=', monthTs),
-    orderBy('submittedAt', 'desc')
-  );
+  const currentMonthPrefix = getTodayLoc().substring(0, 7); // YYYY-MM
+  const q = query(entriesCol, where('operatorUid', '==', uid));
   const snap = await getDocs(q);
-  const entries = snap.docs.map(d => d.data() as ProductionEntry);
+  const entries = snap.docs
+    .map(d => d.data() as ProductionEntry)
+    .filter(e => e.productionDate?.startsWith(currentMonthPrefix));
   
   return {
     monthBoxTotal: entries.reduce((acc, curr) => acc + (curr.quantity || 0), 0),
@@ -67,18 +69,12 @@ export const getTodayProductionStats = async (uid: string): Promise<{
   approvedBox: number; 
   approvedPcs: number; 
 }> => {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayTs = Timestamp.fromDate(todayStart);
-
-  const q = query(
-    entriesCol,
-    where('operatorUid', '==', uid),
-    where('submittedAt', '>=', todayTs),
-    orderBy('submittedAt', 'desc')
-  );
+  const todayStr = getTodayLoc();
+  const q = query(entriesCol, where('operatorUid', '==', uid));
   const snap = await getDocs(q);
-  const entries = snap.docs.map(d => d.data() as ProductionEntry);
+  const entries = snap.docs
+    .map(d => d.data() as ProductionEntry)
+    .filter(e => e.productionDate === todayStr);
   
   const approvedEntries = entries.filter(e => e.status === 'approved');
 
@@ -135,66 +131,40 @@ export const getWeeklyProductionStats = async (uid: string): Promise<{
   box: number; 
   pcs: number; 
 }[]> => {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
-  const startTs = Timestamp.fromDate(sevenDaysAgo);
-
-  const q = query(
-    entriesCol,
-    where('operatorUid', '==', uid)
-  );
-
-  const snap = await getDocs(q);
-  const entries = snap.docs
-    .map(d => ({ 
-      ...(d.data() as ProductionEntry), 
-      id: d.id,
-      submittedAt: d.data().submittedAt as Timestamp 
-    }))
-    .filter(e => e.submittedAt && e.submittedAt.toMillis() >= startTs.toMillis())
-    .sort((a, b) => (a.submittedAt?.toMillis() || 0) - (b.submittedAt?.toMillis() || 0));
-
-  // Helper for stable Local YYYY-MM-DD
-  const getLocKey = (date: Date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  };
-
-  // Group by date
+  const today = new Date();
+  const dateRange: string[] = [];
   const statsMap: Record<string, { label: string; box: number; pcs: number }> = {};
-  
-  // Initialize last 7 days with Local Keys
+
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
-    d.setDate(d.getDate() - i);
-    const key = getLocKey(d);
+    d.setDate(today.getDate() - i);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const key = `${y}-${m}-${day}`;
+    // Format label based on the specific date d
     const label = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
     statsMap[key] = { label, box: 0, pcs: 0 };
+    dateRange.push(key);
   }
 
+  const q = query(entriesCol, where('operatorUid', '==', uid));
+  const snap = await getDocs(q);
+  const entries = snap.docs.map(d => d.data() as ProductionEntry);
+
   entries.forEach(entry => {
-    if (!entry.submittedAt) return;
-    try {
-      const key = getLocKey(entry.submittedAt.toDate());
-      if (statsMap[key]) {
-        statsMap[key].box += (entry.quantity || 0);
-        statsMap[key].pcs += (entry.quantity2 || 0);
-      }
-    } catch (e) {
-      console.warn('Skipping entry with invalid date', entry.id);
+    const key = entry.productionDate;
+    if (key && statsMap[key]) {
+      statsMap[key].box += (entry.quantity || 0);
+      statsMap[key].pcs += (entry.quantity2 || 0);
     }
   });
 
-  return Object.keys(statsMap)
-    .sort() // Chronological YYYY-MM-DD order
-    .map(key => ({
-      date: statsMap[key].label,
-      box: Number(statsMap[key].box || 0),
-      pcs: Number(statsMap[key].pcs || 0)
-    }));
+  return dateRange.map(key => ({
+    date: statsMap[key].label,
+    box: Number(statsMap[key].box || 0),
+    pcs: Number(statsMap[key].pcs || 0)
+  }));
 };
 
 export const getEfficiencyStats = async (uid: string): Promise<{
