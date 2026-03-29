@@ -155,25 +155,33 @@ export const getWeeklyProductionStats = async (uid: string): Promise<{
     .filter(e => e.submittedAt && e.submittedAt.toMillis() >= startTs.toMillis())
     .sort((a, b) => (a.submittedAt?.toMillis() || 0) - (b.submittedAt?.toMillis() || 0));
 
+  // Helper for stable Local YYYY-MM-DD
+  const getLocKey = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
   // Group by date
   const statsMap: Record<string, { label: string; box: number; pcs: number }> = {};
   
-  // Initialize last 7 days
+  // Initialize last 7 days with Local Keys
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const isoDate = d.toISOString().split('T')[0];
+    const key = getLocKey(d);
     const label = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
-    statsMap[isoDate] = { label, box: 0, pcs: 0 };
+    statsMap[key] = { label, box: 0, pcs: 0 };
   }
 
   entries.forEach(entry => {
     if (!entry.submittedAt) return;
     try {
-      const dateStr = entry.submittedAt.toDate().toISOString().split('T')[0];
-      if (statsMap[dateStr]) {
-        statsMap[dateStr].box += (entry.quantity || 0);
-        statsMap[dateStr].pcs += (entry.quantity2 || 0);
+      const key = getLocKey(entry.submittedAt.toDate());
+      if (statsMap[key]) {
+        statsMap[key].box += (entry.quantity || 0);
+        statsMap[key].pcs += (entry.quantity2 || 0);
       }
     } catch (e) {
       console.warn('Skipping entry with invalid date', entry.id);
@@ -181,11 +189,11 @@ export const getWeeklyProductionStats = async (uid: string): Promise<{
   });
 
   return Object.keys(statsMap)
-    .sort() // Ensure chronological order
+    .sort() // Chronological YYYY-MM-DD order
     .map(key => ({
       date: statsMap[key].label,
-      box: statsMap[key].box,
-      pcs: statsMap[key].pcs
+      box: Number(statsMap[key].box || 0),
+      pcs: Number(statsMap[key].pcs || 0)
     }));
 };
 

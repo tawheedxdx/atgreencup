@@ -32,16 +32,22 @@ export const TrendsPage: React.FC = () => {
     fetchStats();
   }, [profile]);
 
-  const maxVal = Math.max(...stats.map(s => activeTab === 'box' ? s.box : s.pcs), 1);
+  const processedStats = React.useMemo(() => stats, [stats]);
+  const maxVal = React.useMemo(() => 
+    Math.max(...processedStats.map(s => activeTab === 'box' ? s.box : s.pcs), 1),
+    [processedStats, activeTab]
+  );
 
   if (loading) return <LoadingView message="Analyzing trends..." />;
+
+  const weeklyTotal = processedStats.reduce((acc, curr) => acc + (activeTab === 'box' ? curr.box : curr.pcs), 0);
 
   return (
     <PageTransition className="min-h-screen bg-gray-50 pb-24">
       {/* Header */}
       <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 px-6 pt-12 pb-20 rounded-b-[3rem] shadow-xl">
         <h1 className="text-white text-3xl font-black tracking-tight mb-2">Production Trends</h1>
-        <p className="text-emerald-100 text-sm font-medium opacity-80">Your performance over the last 7 days</p>
+        <p className="text-emerald-100 text-sm font-medium opacity-80">Your local calendar trends (7 Days)</p>
       </div>
 
       <div className="px-6 -mt-10">
@@ -62,7 +68,7 @@ export const TrendsPage: React.FC = () => {
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
-              <span className="relative z-10">{tab === 'box' ? 'BOX (Unit 1)' : 'PCS (Unit 2)'}</span>
+              <span className="relative z-10">{tab === 'box' ? 'BOX' : 'PCS'}</span>
             </button>
           ))}
         </div>
@@ -73,42 +79,48 @@ export const TrendsPage: React.FC = () => {
           animate={{ y: 0, opacity: 1 }}
           className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-emerald-950/5 border border-gray-100"
         >
-          <div className="flex items-end justify-between h-64 gap-2 mb-6">
-            {stats.map((day, i) => {
+          <div className="flex items-end justify-between h-56 gap-3 mb-6 px-1">
+            {processedStats.map((day, i) => {
               const val = activeTab === 'box' ? day.box : day.pcs;
+              // Ensure height is at least 4% for visibility if 0, or up to 100%
               const height = (val / maxVal) * 100;
               
               return (
-                <div key={day.date} className="flex-1 flex flex-col items-center gap-3 h-full justify-end">
-                  <div className="relative w-full flex justify-center group">
+                <div key={day.date} className="flex-1 flex flex-col items-center h-full justify-end">
+                  <div className="relative w-full flex justify-center group h-full items-end">
                     {/* Tooltip */}
                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
-                      {val} {activeTab.toUpperCase()}
+                      {val.toLocaleString()} {activeTab.toUpperCase()}
                     </div>
                     
-                    {/* Bar */}
+                    {/* Bar container */}
                     <motion.div
+                      layout
                       initial={{ height: 0 }}
-                      animate={{ height: `${height}%` }}
+                      animate={{ height: `${Math.max(height, 2)}%` }}
                       transition={{ 
                         type: "spring", 
-                        stiffness: 100, 
-                        damping: 15,
-                        delay: i * 0.1 
+                        stiffness: 120, 
+                        damping: 18,
+                        delay: i * 0.05 
                       }}
-                      className={`w-full max-w-[32px] rounded-t-xl rounded-b-md ${
-                        activeTab === 'box' ? 'bg-emerald-500 shadow-emerald-100' : 'bg-blue-500 shadow-blue-100'
-                      } shadow-lg relative overflow-hidden`}
+                      className={`w-full max-w-[28px] rounded-t-lg ${
+                        val > 0 
+                          ? (activeTab === 'box' ? 'bg-emerald-500 shadow-emerald-200' : 'bg-blue-500 shadow-blue-200')
+                          : 'bg-gray-100'
+                      } shadow-md relative overflow-hidden`}
                     >
-                      <motion.div 
-                        animate={{ y: ["0%", "-100%"] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 bg-white/10 w-full h-[200%] -translate-y-full skew-y-12"
-                      />
+                      {val > 0 && (
+                        <motion.div 
+                          animate={{ y: ["0%", "-100%"] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                          className="absolute inset-0 bg-white/10 w-full h-[200%] -translate-y-full skew-y-12"
+                        />
+                      )}
                     </motion.div>
                   </div>
-                  <span className="text-[10px] font-black text-gray-400 uppercase rotate-45 mt-2 origin-left">
-                    {day.date.split(' ')[0]} {day.date.split(' ')[1]}
+                  <span className="text-[9px] font-black text-gray-400 uppercase mt-4 whitespace-nowrap text-center w-full">
+                    {day.date}
                   </span>
                 </div>
               );
@@ -126,7 +138,7 @@ export const TrendsPage: React.FC = () => {
           >
             <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Weekly Avg</p>
             <h3 className="text-2xl font-black text-emerald-900">
-              {Math.round(stats.reduce((acc, curr) => acc + (activeTab === 'box' ? curr.box : curr.pcs), 0) / 7)}
+              {Math.round(weeklyTotal / 7).toLocaleString()}
             </h3>
           </motion.div>
           <motion.div
@@ -136,7 +148,7 @@ export const TrendsPage: React.FC = () => {
             className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100"
           >
             <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Peak Day</p>
-            <h3 className="text-2xl font-black text-blue-900">{maxVal}</h3>
+            <h3 className="text-2xl font-black text-blue-900">{maxVal.toLocaleString()}</h3>
           </motion.div>
         </div>
       </div>
