@@ -9,6 +9,7 @@ import { EntryCard } from '../../components/ui/EntryCard';
 import { Button } from '../../components/ui/Button';
 import { LoadingView } from '../../components/feedback/LoadingView';
 import { EmptyState } from '../../components/feedback/EmptyState';
+import { PageTransition } from '../../components/layout/PageTransition';
 import type { ProductionEntry } from '../../types';
 
 const containerVariants: Variants = {
@@ -60,10 +61,10 @@ export const DashboardPage: React.FC = () => {
   const firstName = profile?.name?.split(' ')[0] || 'Operator';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <PageTransition className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <motion.div 
-        initial={{ y: '-10%', opacity: 0 }}
+        initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 px-5 pt-12 pb-8 rounded-b-[2.5rem] shadow-xl relative z-10"
@@ -265,6 +266,6 @@ export const DashboardPage: React.FC = () => {
           )}
         </section>
       </div>
-    </div>
+    </PageTransition>
   );
 };
