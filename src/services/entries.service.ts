@@ -38,8 +38,8 @@ export const getEntryById = async (id: string): Promise<ProductionEntry | null> 
 };
 
 export const getMonthProductionStats = async (uid: string): Promise<{ 
-  boxTotal: number; 
-  pcsTotal: number; 
+  monthBoxTotal: number; 
+  monthPcsTotal: number; 
 }> => {
   const monthStart = new Date();
   monthStart.setDate(1);
@@ -56,8 +56,8 @@ export const getMonthProductionStats = async (uid: string): Promise<{
   const entries = snap.docs.map(d => d.data() as ProductionEntry);
   
   return {
-    boxTotal: entries.reduce((acc, curr) => acc + (curr.quantity || 0), 0),
-    pcsTotal: entries.reduce((acc, curr) => acc + (curr.quantity2 || 0), 0),
+    monthBoxTotal: entries.reduce((acc, curr) => acc + (curr.quantity || 0), 0),
+    monthPcsTotal: entries.reduce((acc, curr) => acc + (curr.quantity2 || 0), 0),
   };
 };
 
