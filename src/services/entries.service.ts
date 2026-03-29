@@ -142,42 +142,51 @@ export const getWeeklyProductionStats = async (uid: string): Promise<{
 
   const q = query(
     entriesCol,
-    where('operatorUid', '==', uid),
-    where('submittedAt', '>=', startTs),
-    orderBy('submittedAt', 'asc')
+    where('operatorUid', '==', uid)
   );
 
   const snap = await getDocs(q);
-  const entries = snap.docs.map(d => ({ 
-    ...(d.data() as ProductionEntry), 
-    id: d.id,
-    submittedAt: d.data().submittedAt as Timestamp 
-  }));
+  const entries = snap.docs
+    .map(d => ({ 
+      ...(d.data() as ProductionEntry), 
+      id: d.id,
+      submittedAt: d.data().submittedAt as Timestamp 
+    }))
+    .filter(e => e.submittedAt && e.submittedAt.toMillis() >= startTs.toMillis())
+    .sort((a, b) => (a.submittedAt?.toMillis() || 0) - (b.submittedAt?.toMillis() || 0));
 
   // Group by date
-  const statsMap: Record<string, { box: number; pcs: number }> = {};
+  const statsMap: Record<string, { label: string; box: number; pcs: number }> = {};
   
   // Initialize last 7 days
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
-    statsMap[dateStr] = { box: 0, pcs: 0 };
+    const isoDate = d.toISOString().split('T')[0];
+    const label = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+    statsMap[isoDate] = { label, box: 0, pcs: 0 };
   }
 
   entries.forEach(entry => {
     if (!entry.submittedAt) return;
-    const dateStr = entry.submittedAt.toDate().toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
-    if (statsMap[dateStr]) {
-      statsMap[dateStr].box += (entry.quantity || 0);
-      statsMap[dateStr].pcs += (entry.quantity2 || 0);
+    try {
+      const dateStr = entry.submittedAt.toDate().toISOString().split('T')[0];
+      if (statsMap[dateStr]) {
+        statsMap[dateStr].box += (entry.quantity || 0);
+        statsMap[dateStr].pcs += (entry.quantity2 || 0);
+      }
+    } catch (e) {
+      console.warn('Skipping entry with invalid date', entry.id);
     }
   });
 
-  return Object.keys(statsMap).map(date => ({
-    date,
-    ...statsMap[date]
-  }));
+  return Object.keys(statsMap)
+    .sort() // Ensure chronological order
+    .map(key => ({
+      date: statsMap[key].label,
+      box: statsMap[key].box,
+      pcs: statsMap[key].pcs
+    }));
 };
 
 export const getEfficiencyStats = async (uid: string): Promise<{

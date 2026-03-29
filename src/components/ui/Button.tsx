@@ -1,11 +1,13 @@
 import React from 'react';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends HTMLMotionProps<'button'> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   fullWidth?: boolean;
   icon?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const variants = {
@@ -32,7 +34,7 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => (
-  <button
+  <motion.button
     className={`
       inline-flex items-center justify-center gap-2 font-semibold
       transition-all duration-150 select-none
@@ -53,5 +55,5 @@ export const Button: React.FC<ButtonProps> = ({
       icon
     ) : null}
     {children}
-  </button>
+  </motion.button>
 );
