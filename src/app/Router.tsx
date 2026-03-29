@@ -16,8 +16,9 @@ import { PastEntriesPage } from '../features/entries/PastEntriesPage';
 import { EntryDetailsPage } from '../features/entries/EntryDetailsPage';
 import { EditEntryPage } from '../features/entries/EditEntryPage';
 import { ProfilePage } from '../features/profile/ProfilePage';
+import { TrendsPage } from '../features/trends/TrendsPage';
 
-const AnimatedRoutes: React.FC = () => {
+export const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
   
   return (
@@ -37,6 +38,7 @@ const AnimatedRoutes: React.FC = () => {
           <ProtectedRoute><AppShell /></ProtectedRoute>
         }>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/trends" element={<TrendsPage />} />
           <Route path="/entries" element={<PastEntriesPage />} />
           <Route path="/entries/new" element={<NewEntryPage />} />
           <Route path="/entries/:id" element={<EntryDetailsPage />} />

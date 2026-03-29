@@ -129,3 +129,71 @@ export const getShifts = async (): Promise<Shift[]> => {
     .filter(s => s.active !== false);
 };
 
+// ─── Analytics ───────────────────────────────────────────────
+export const getWeeklyProductionStats = async (uid: string): Promise<{ 
+  date: string; 
+  box: number; 
+  pcs: number; 
+}[]> => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const startTs = Timestamp.fromDate(sevenDaysAgo);
+
+  const q = query(
+    entriesCol,
+    where('operatorUid', '==', uid),
+    where('submittedAt', '>=', startTs),
+    orderBy('submittedAt', 'asc')
+  );
+
+  const snap = await getDocs(q);
+  const entries = snap.docs.map(d => ({ 
+    ...(d.data() as ProductionEntry), 
+    id: d.id,
+    submittedAt: d.data().submittedAt as Timestamp 
+  }));
+
+  // Group by date
+  const statsMap: Record<string, { box: number; pcs: number }> = {};
+  
+  // Initialize last 7 days
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+    statsMap[dateStr] = { box: 0, pcs: 0 };
+  }
+
+  entries.forEach(entry => {
+    if (!entry.submittedAt) return;
+    const dateStr = entry.submittedAt.toDate().toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+    if (statsMap[dateStr]) {
+      statsMap[dateStr].box += (entry.quantity || 0);
+      statsMap[dateStr].pcs += (entry.quantity2 || 0);
+    }
+  });
+
+  return Object.keys(statsMap).map(date => ({
+    date,
+    ...statsMap[date]
+  }));
+};
+
+export const getEfficiencyStats = async (uid: string): Promise<{
+  total: number;
+  approved: number;
+  rejected: number;
+  percentage: number;
+}> => {
+  const q = query(entriesCol, where('operatorUid', '==', uid));
+  const snap = await getDocs(q);
+  const entries = snap.docs.map(d => d.data() as ProductionEntry);
+
+  const total = entries.length;
+  const approved = entries.filter(e => e.status === 'approved').length;
+  const rejected = entries.filter(e => e.status === 'rejected').length;
+  const percentage = total > 0 ? Math.round((approved / total) * 100) : 100;
+
+  return { total, approved, rejected, percentage };
+};

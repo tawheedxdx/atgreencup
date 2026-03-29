@@ -19,11 +19,30 @@ const itemVariants: Variants = {
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 };
 
+import { getEfficiencyStats } from '../../services/entries.service';
+
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { profile, logout } = useAuthStore();
   const [showLogout, setShowLogout] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [efficiency, setEfficiency] = useState<{ percentage: number; total: number; approved: number; rejected: number } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  React.useEffect(() => {
+    if (!profile) return;
+    const fetchStats = async () => {
+      try {
+        const stats = await getEfficiencyStats(profile.uid);
+        setEfficiency(stats);
+      } catch (err) {
+        console.error('Failed to fetch efficiency stats:', err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    fetchStats();
+  }, [profile]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -58,6 +77,54 @@ export const ProfilePage: React.FC = () => {
           <motion.p variants={itemVariants} className="text-sm font-medium text-emerald-600 capitalize mt-0.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100">
             {profile.role}
           </motion.p>
+        </motion.div>
+
+        {/* Efficiency Card */}
+        <motion.div variants={itemVariants} className="bg-white/80 backdrop-blur-lg rounded-[2.5rem] p-8 shadow-xl shadow-emerald-950/5 border border-white mb-6 flex items-center gap-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+            <svg className="w-24 h-24 text-emerald-900" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+          </div>
+          
+          {/* Progress Ring */}
+          <div className="relative w-24 h-24 flex-shrink-0">
+            <svg className="w-full h-full" viewBox="0 0 100 100">
+              <circle className="text-emerald-100" strokeWidth="10" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+              <motion.circle
+                className="text-emerald-500"
+                strokeWidth="10"
+                strokeDasharray="251.2"
+                initial={{ strokeDashoffset: 251.2 }}
+                animate={{ strokeDashoffset: 251.2 - (251.2 * (efficiency?.percentage || 0)) / 100 }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                strokeLinecap="round"
+                stroke="currentColor"
+                fill="transparent"
+                r="40"
+                cx="50"
+                cy="50"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xl font-black text-gray-900">{efficiency?.percentage || 0}%</span>
+            </div>
+          </div>
+
+          <div className="flex-1">
+            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Efficiency Rating</h3>
+            <p className="text-lg font-black text-emerald-900 mb-2">Quality Hub</p>
+            <div className="flex gap-4">
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Approved</p>
+                <p className="text-sm font-black text-emerald-600">{efficiency?.approved || 0}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Rejected</p>
+                <p className="text-sm font-black text-red-500">{efficiency?.rejected || 0}</p>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Info Card */}
