@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, Variants } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { getTodayProductionStats, getMonthProductionStats, getEntriesByOperator } from '../../services/entries.service';
@@ -27,6 +28,7 @@ const itemVariants: Variants = {
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { profile } = useAuthStore();
   const { 
     boxTotal, pcsTotal, approvedBox, approvedPcs, 
@@ -61,19 +63,19 @@ export const DashboardPage: React.FC = () => {
   const firstName = profile?.name?.split(' ')[0] || 'Operator';
 
   return (
-    <PageTransition className="min-h-screen bg-gray-50 pb-20">
+    <PageTransition className="min-h-screen bg-gray-50 dark:bg-dark-bg pb-24 transition-colors duration-300">
       {/* Header */}
       <motion.div 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 px-5 pt-12 pb-8 rounded-b-[2.5rem] shadow-xl relative z-10"
+        className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 dark:from-emerald-900 dark:via-[#0B251D] dark:to-dark-bg px-5 pt-12 pb-12 rounded-b-[3rem] shadow-xl relative z-10"
       >
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-8">
             <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-              <p className="text-emerald-200/90 text-sm font-medium">Welcome back,</p>
-              <h1 className="text-white text-2xl font-bold tracking-tight">{firstName} 👋</h1>
+              <p className="text-emerald-100/80 dark:text-emerald-500/80 text-xs font-black uppercase tracking-widest mb-1">{t('dashboard.welcome')}</p>
+              <h1 className="text-white dark:text-emerald-50 text-2xl font-black tracking-tight">{firstName} 👋</h1>
             </motion.div>
             <motion.button
               initial={{ scale: 0, opacity: 0 }}
@@ -81,9 +83,9 @@ export const DashboardPage: React.FC = () => {
               transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => navigate('/profile')}
-              className="w-11 h-11 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center ring-1 ring-white/20 shadow-inner"
+              className="w-12 h-12 bg-white/10 dark:bg-emerald-500/10 backdrop-blur-md rounded-2xl flex items-center justify-center ring-1 ring-white/20 dark:ring-emerald-500/20 shadow-inner"
             >
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-white dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </motion.button>
@@ -94,43 +96,43 @@ export const DashboardPage: React.FC = () => {
               onClick={() => navigate('/entries/new')}
               fullWidth
               size="lg"
-              className="!bg-white !text-emerald-800 !font-bold shadow-xl shadow-emerald-900/20"
+              className="!bg-white dark:!bg-emerald-500 !text-emerald-800 dark:!text-emerald-950 !font-black !rounded-2xl shadow-xl shadow-emerald-900/20"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                 </svg>
               }
             >
-              New Production
+              {t('entry.new_title')}
             </Button>
           </motion.div>
         </div>
       </motion.div>
 
-      <div className="px-5 max-w-lg mx-auto -mt-4 relative z-20">
+      <div className="px-5 max-w-lg mx-auto -mt-6 relative z-20">
         {/* Stats Grid */}
-        <section className="mt-8">
+        <section className="mt-10">
           <motion.h2 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-            className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 px-1"
+            className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em] mb-4 px-1"
           >
-            Today's Sum (Production)
+            {t('dashboard.today_sum')}
           </motion.h2>
           
           {statsLoading ? (
-            <LoadingView message="Loading stats..." />
+            <LoadingView message={t('common.loading')} />
           ) : (
             <motion.div 
               variants={containerVariants}
               initial="hidden"
               animate="show"
-              className="grid grid-cols-2 gap-3"
+              className="grid grid-cols-2 gap-4"
             >
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Today's BOX"
+                  title={t('dashboard.today_box')}
                   value={boxTotal}
-                  color="#3B82F6"
+                  color="#10B981"
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -140,9 +142,9 @@ export const DashboardPage: React.FC = () => {
               </motion.div>
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Today's PCS"
+                  title={t('dashboard.today_pcs')}
                   value={pcsTotal}
-                  color="#F59E0B"
+                  color="#3B82F6"
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -152,9 +154,9 @@ export const DashboardPage: React.FC = () => {
               </motion.div>
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Approved BOX"
+                  title={t('dashboard.approved_box')}
                   value={approvedBox}
-                  color="#10B981"
+                  color="#059669"
                   icon={
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -164,7 +166,7 @@ export const DashboardPage: React.FC = () => {
               </motion.div>
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Approved PCS"
+                  title={t('dashboard.approved_pcs')}
                   value={approvedPcs}
                   color="#8B5CF6"
                   icon={
@@ -179,26 +181,26 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* Monthly Summary */}
-        <section className="mt-8">
+        <section className="mt-10">
           <motion.h2 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-            className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 px-1"
+            className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em] mb-4 px-1"
           >
-            This Month's Production
+            {t('dashboard.monthly_sum')}
           </motion.h2>
           
           {statsLoading ? (
-            <LoadingView message="Loading stats..." />
+            <LoadingView message={t('common.loading')} />
           ) : (
             <motion.div 
               variants={containerVariants}
               initial="hidden"
               animate="show"
-              className="grid grid-cols-2 gap-3"
+              className="grid grid-cols-2 gap-4"
             >
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Monthly BOX"
+                  title={t('dashboard.monthly_box')}
                   value={monthBoxTotal}
                   color="#6366F1"
                   icon={
@@ -210,7 +212,7 @@ export const DashboardPage: React.FC = () => {
               </motion.div>
               <motion.div variants={itemVariants}>
                 <SummaryCard
-                  title="Monthly PCS"
+                  title={t('dashboard.monthly_pcs')}
                   value={monthPcsTotal}
                   color="#EC4899"
                   icon={
@@ -225,19 +227,19 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* Recent Productions */}
-        <section className="mt-8 mb-6">
+        <section className="mt-10 mb-8">
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-            className="flex items-center justify-between mb-4 px-1"
+            className="flex items-center justify-between mb-5 px-1"
           >
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Recent Productions</h2>
-            <button onClick={() => navigate('/entries')} className="text-xs text-emerald-600 font-bold tracking-wide active:opacity-70 transition-opacity">
-              VIEW ALL
+            <h2 className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em]">{t('dashboard.recent')}</h2>
+            <button onClick={() => navigate('/entries')} className="text-[10px] text-emerald-600 dark:text-emerald-500 font-black uppercase tracking-widest active:opacity-70 transition-opacity">
+              {t('dashboard.view_all')}
             </button>
           </motion.div>
 
           {loadingRecent ? (
-            <LoadingView message="Loading productions..." />
+            <LoadingView message={t('common.loading')} />
           ) : recentEntries.length === 0 ? (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}>
               <EmptyState
@@ -255,7 +257,7 @@ export const DashboardPage: React.FC = () => {
               variants={containerVariants}
               initial="hidden"
               animate="show"
-              className="space-y-3"
+              className="space-y-4"
             >
               {recentEntries.map((entry) => (
                 <motion.div key={entry.id} variants={itemVariants}>

@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { entrySchema, type EntryFormData } from './entrySchema';
 import { useAuthStore } from '../../store/authStore';
-import { createEntry, updateEntry } from '../../services/entries.service';
+import { createEntry, updateEntry, getProducts, getMachines, getUnits, getShifts } from '../../services/entries.service';
 import { uploadEntryImage } from '../../services/storage.service';
-import { getProducts, getMachines, getUnits, getShifts } from '../../services/entries.service';
 import { compressImage, todayISO } from '../../utils/helpers';
 import { MobileHeader } from '../../components/layout/MobileHeader';
 import { Input } from '../../components/ui/Input';
@@ -18,6 +18,7 @@ import type { Product, Machine, Unit, Shift } from '../../types';
 
 export const NewEntryPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { profile } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -102,34 +103,34 @@ export const NewEntryPage: React.FC = () => {
       }
 
       setSubmitting(false);
-      setToast({ message: 'Production submitted successfully!', type: 'success' });
+      setToast({ message: t('common.success'), type: 'success' });
       setTimeout(() => navigate('/dashboard', { replace: true }), 1500);
     } catch (err: any) {
       console.error('Submit error:', err);
-      setToast({ message: 'Failed to submit production. Please try again.', type: 'error' });
+      setToast({ message: t('common.error'), type: 'error' });
       setSubmitting(false);
     }
-  }, [submitting, imageFile, profile, navigate]);
+  }, [submitting, imageFile, profile, navigate, t]);
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <MobileHeader title="New Production" onBack={() => navigate(-1)} />
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-colors duration-300">
+      <MobileHeader title={t('entry.new_title')} onBack={() => navigate(-1)} />
 
-      <div className="px-5 py-4 max-w-lg mx-auto">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <div className="px-5 py-6 max-w-lg mx-auto">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Operator Info (read-only) */}
-          <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
-            <p className="text-xs text-emerald-600 font-semibold uppercase tracking-wider mb-1">Operator</p>
-            <p className="text-sm font-bold text-gray-900">{profile?.name}</p>
+          <div className="bg-emerald-50 dark:bg-dark-surface/40 rounded-[1.5rem] p-5 border border-emerald-100 dark:border-dark-border shadow-sm">
+            <p className="text-[10px] text-emerald-600 dark:text-emerald-500 font-black uppercase tracking-[0.2em] mb-1.5">Operator</p>
+            <p className="text-base font-black text-gray-900 dark:text-emerald-50">{profile?.name}</p>
             {profile?.employeeId && (
-              <p className="text-xs text-gray-500">ID: {profile.employeeId}</p>
+              <p className="text-xs font-bold text-gray-400 mt-1">ID: {profile.employeeId}</p>
             )}
           </div>
 
           {/* Date */}
           <Input
-            label="Production Date"
+            label={t('entry.date')}
             type="date"
             {...register('productionDate')}
             error={errors.productionDate?.message}
@@ -137,8 +138,8 @@ export const NewEntryPage: React.FC = () => {
 
           {/* Machine */}
           <Select
-            label="Machine"
-            placeholder="Select machine"
+            label={t('entry.machine')}
+            placeholder={t('entry.machine')}
             options={machines.map(m => ({ value: m.machineNo, label: `${m.machineNo} — ${m.label}` }))}
             {...register('machineNo')}
             error={errors.machineNo?.message}
@@ -146,8 +147,8 @@ export const NewEntryPage: React.FC = () => {
 
           {/* Product */}
           <Select
-            label="Product"
-            placeholder="Select product"
+            label={t('entry.product')}
+            placeholder={t('entry.product')}
             options={products.map(p => ({ value: p.id, label: p.name }))}
             {...register('productId')}
             error={errors.productId?.message}
@@ -160,14 +161,14 @@ export const NewEntryPage: React.FC = () => {
               control={control}
               render={({ field }) => (
                 <Input
-                  label="Quantity (BOX)"
+                  label={t('entry.quantity_box')}
                   type="number"
                   inputMode="decimal"
                   placeholder="0"
                   value={field.value ?? ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                   error={errors.quantity?.message}
-                  rightIcon={<span className="text-sm font-semibold text-gray-400 pr-3">BOX</span>}
+                  rightIcon={<span className="text-xs font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">{t('common.box')}</span>}
                 />
               )}
             />
@@ -180,14 +181,14 @@ export const NewEntryPage: React.FC = () => {
               control={control}
               render={({ field }) => (
                 <Input
-                  label="Quantity (PCS)"
+                  label={t('entry.quantity_pcs')}
                   type="number"
                   inputMode="decimal"
                   placeholder="0"
                   value={field.value ?? ''}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                   error={errors.quantity2?.message}
-                  rightIcon={<span className="text-sm font-semibold text-gray-400 pr-3">PCS</span>}
+                  rightIcon={<span className="text-xs font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">{t('common.pcs')}</span>}
                 />
               )}
             />
@@ -195,8 +196,8 @@ export const NewEntryPage: React.FC = () => {
 
           {/* Shift */}
           <Select
-            label="Shift"
-            placeholder="Select shift"
+            label={t('entry.shift')}
+            placeholder={t('entry.shift')}
             options={shifts.map(s => ({ value: s.code || s.name, label: s.name }))}
             {...register('shift')}
             error={errors.shift?.message}
@@ -204,12 +205,14 @@ export const NewEntryPage: React.FC = () => {
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Notes / Remarks</label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-emerald-100/80 mb-2 px-1 tracking-tight">
+              {t('entry.notes')}
+            </label>
             <textarea
               {...register('notes')}
               rows={3}
-              placeholder="Optional notes..."
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+              placeholder={t('entry.placeholder_notes')}
+              className="w-full bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-2xl px-4 py-4 text-gray-900 dark:text-emerald-50 text-base placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none font-medium"
             />
           </div>
 
@@ -222,7 +225,7 @@ export const NewEntryPage: React.FC = () => {
 
           {/* Upload progress */}
           {submitting && uploadProgress > 0 && uploadProgress < 100 && (
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 dark:bg-dark-surface rounded-full h-2">
               <div
                 className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
@@ -231,9 +234,9 @@ export const NewEntryPage: React.FC = () => {
           )}
 
           {/* Submit */}
-          <div className="pt-2 pb-6">
-            <Button type="submit" fullWidth size="lg" loading={submitting}>
-              {submitting ? 'Submitting...' : 'Submit Production'}
+          <div className="pt-4 pb-10">
+            <Button type="submit" fullWidth size="lg" loading={submitting} className="!rounded-2xl shadow-xl shadow-emerald-500/10">
+              {submitting ? t('entry.submitting') : t('common.submit')}
             </Button>
           </div>
         </form>

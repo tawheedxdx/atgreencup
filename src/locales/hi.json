@@ -1,0 +1,111 @@
+{
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "error": "कुछ गलत हो गया",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "success": "सफलता",
+    "back": "पीछे",
+    "next": "अगला",
+    "submit": "जमा करें",
+    "edit": "संपादन",
+    "delete": "हटाएं",
+    "no_data": "डेटा उपलब्ध नहीं है",
+    "box": "डिब्बा (BOX)",
+    "pcs": "टुकड़ा (PCS)",
+    "clear_filters": "फ़िल्टर साफ़ करें",
+    "confirm_delete": "उत्पादन हटाएं",
+    "confirm_delete_msg": "क्या आप वाकई इस उत्पादन को हटाना चाहते हैं?"
+  },
+  "nav": {
+    "dashboard": "डैशबोर्ड",
+    "trends": "प्रवृत्ति (Trends)",
+    "history": "इतिहास",
+    "profile": "प्रोफ़ाइल",
+    "new_entry": "नई प्रविष्टि"
+  },
+  "dashboard": {
+    "welcome": "वापसी पर स्वागत है,",
+    "today_sum": "आज का कुल उत्पादन",
+    "today_box": "आज के डिब्बे",
+    "today_pcs": "आज के टुकड़े",
+    "approved_box": "स्वीकृत डिब्बे",
+    "approved_pcs": "स्वीकृत टुकड़े",
+    "monthly_sum": "इस महीने का उत्पादन",
+    "monthly_box": "मासिक डिब्बे",
+    "monthly_pcs": "मासिक टुकड़े",
+    "recent": "हाल का उत्पादन",
+    "view_all": "सब देखें"
+  },
+  "trends": {
+    "title": "उत्पादन की प्रवृत्ति",
+    "subtitle": "पिछले 7 दिनों का प्रदर्शन",
+    "weekly_avg": "साप्ताहिक औसत",
+    "peak_day": "सर्वाधिक उत्पादन दिन"
+  },
+  "profile": {
+    "title": "प्रोफ़ाइल",
+    "rating": "कार्यक्षमता रेटिंग",
+    "quality_hub": "गुणवत्ता केंद्र",
+    "approved": "स्वीकार",
+    "rejected": "अस्वीकार",
+    "details": "खाते का विवरण",
+    "operator": "ऑपरेटर",
+    "email": "ईमेल पता",
+    "emp_id": "कर्मचारी आईडी",
+    "machines": "निर्धारित मशीनें",
+    "system": "सिस्टम",
+    "version": "ऐप संस्करण",
+    "support": "सहायता डेस्क",
+    "sign_out": "साइन आउट",
+    "settings": "ऐप सेटिंग्स",
+    "language": "भाषा",
+    "theme": "थीम",
+    "appearance": "दिखावट",
+    "dark_mode": "डार्क मोड",
+    "light_mode": "लाइट मोड"
+  },
+  "entry": {
+    "date": "उत्पादन की तारीख",
+    "date_from": "प्रारंभिक तिथि",
+    "date_to": "अंतिम तिथि",
+    "notes": "नोट्स / टिप्पणी",
+    "camera": "फोटो लें / छवि चुनें",
+    "submitting": "जमा कर रहे हैं...",
+    "placeholder_notes": "कोई विशिष्ट विवरण दर्ज करें..."
+  },
+  "history": {
+    "title": "उत्पादन इतिहास",
+    "details_title": "उत्पादन विवरण",
+    "all_entries": "सभी प्रविष्टियां",
+    "no_entries": "अभी तक कोई उत्पादन नहीं",
+    "no_entries_msg": "इसे यहां देखने के लिए अपनी पहली प्रविष्टि बनाएं।",
+    "no_matching": "कोई मेल खाने वाला उत्पादन नहीं",
+    "no_matching_msg": "अपनी खोज या तिथि फ़िल्टर साफ़ करने का प्रयास करें।",
+    "search_placeholder": "उत्पादन खोजें...",
+    "filter_all": "सब",
+    "filter_pending": "लंबित",
+    "filter_approved": "स्वीकृत",
+    "filter_rejected": "अस्वीकृत",
+    "filter_correction": "सुधार",
+    "last_updated": "अंतिम अपडेट",
+    "correction_required": "सुधार आवश्यक है",
+    "rejection_reason": "अस्वीकृति का कारण",
+    "approved_by": "{{name}} द्वारा अनुमोदित",
+    "delete_success": "उत्पादन सफलतापूर्वक हटा दिया गया",
+    "update_success": "उत्पादन सफलतापूर्वक अपडेट किया गया!",
+    "approved_edit_error": "अनुमोदित प्रविष्टियों को संपादित नहीं किया जा सकता",
+    "not_found": "उत्पादन नहीं मिला"
+  },
+  "status": {
+    "pending": "लंबित",
+    "approved": "स्वीकृत",
+    "rejected": "अस्वीकृत",
+    "correction": "सुधार"
+  },
+  "shift": {
+    "day": "दिन की पाली (Day)",
+    "night": "रात की पाली (Night)"
+  }
+}

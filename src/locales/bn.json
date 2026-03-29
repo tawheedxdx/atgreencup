@@ -1,0 +1,111 @@
+{
+  "common": {
+    "loading": "লোড হচ্ছে...",
+    "error": "কিছু ভুল হয়েছে",
+    "save": "সংরক্ষণ",
+    "cancel": "বাতিল",
+    "confirm": "নিশ্চিত",
+    "success": "সফল",
+    "back": "পিছনে",
+    "next": "পরবর্তী",
+    "submit": "জমা দিন",
+    "edit": "সম্পাদনা",
+    "delete": "মুছে ফেলুন",
+    "no_data": "কোন তথ্য নেই",
+    "box": "বাক্স (BOX)",
+    "pcs": "পিস (PCS)",
+    "clear_filters": "ফিল্টার পরিষ্কার করুন",
+    "confirm_delete": "উৎপাদন মুছে ফেলুন",
+    "confirm_delete_msg": "আপনি কি নিশ্চিত যে এই উৎপাদন মুছে ফেলতে চান?"
+  },
+  "nav": {
+    "dashboard": "ড্যাশবোর্ড",
+    "trends": "ট্রেন্ডস (Trends)",
+    "history": "ইতিহাস",
+    "profile": "প্রোফাইল",
+    "new_entry": "নতুন এন্ট্রি"
+  },
+  "dashboard": {
+    "welcome": "ফিরে আসার জন্য স্বাগতম,",
+    "today_sum": "আজকের উৎপাদন",
+    "today_box": "আজকের বাক্স",
+    "today_pcs": "আজকের পিস",
+    "approved_box": "অনুমোদিত বাক্স",
+    "approved_pcs": "অনুমোদিত পিস",
+    "monthly_sum": "এই মাসের উৎপাদন",
+    "monthly_box": "মাসিক বাক্স",
+    "monthly_pcs": "মাসিক পিস",
+    "recent": "সাম্প্রতিক উৎপাদন",
+    "view_all": "সব দেখুন"
+  },
+  "trends": {
+    "title": "উৎপাদনের প্রবণতা",
+    "subtitle": "গত ৭ দিনের রেকর্ড",
+    "weekly_avg": "সাপ্তাহিক গড়",
+    "peak_day": "সর্বাধিক উৎপাদন দিন"
+  },
+  "profile": {
+    "title": "প্রোফাইল",
+    "rating": "দক্ষতা রেটিং",
+    "quality_hub": "গুণমান কেন্দ্র",
+    "approved": "অনুমোদিত",
+    "rejected": "প্রত্যাখ্যাত",
+    "details": "অ্যাকাউন্টের বিবরণ",
+    "operator": "অপারেটর",
+    "email": "ইমেল ঠিকানা",
+    "emp_id": "কর্মচারী আইডি",
+    "machines": "নির্ধারিত মেশিন",
+    "system": "সিস্টেম",
+    "version": "অ্যাপ ভার্সন",
+    "support": "সহায়তা ডেস্ক",
+    "sign_out": "সাইন আউট",
+    "settings": "অ্যাপ সেটিংস",
+    "language": "ভাষা",
+    "theme": "থিম",
+    "appearance": "চেহারা (থিমিং)",
+    "dark_mode": "ডার্ক মোড",
+    "light_mode": "লাইট মোড"
+  },
+  "entry": {
+    "date": "উৎপাদন তারিখ",
+    "date_from": "প্রারম্ভিক তারিখ",
+    "date_to": "শেষ তারিখ",
+    "notes": "নোট / মন্তব্য",
+    "camera": "ছবি তুলুন / সিলেক্ট করুন",
+    "submitting": "জমা হচ্ছে...",
+    "placeholder_notes": "বিস্তারিত লিখুন..."
+  },
+  "history": {
+    "title": "উৎপাদন ইতিহাস",
+    "details_title": "উৎপাদনের বিবরণ",
+    "all_entries": "সব এন্ট্রি",
+    "no_entries": "এখনও কোনো এন্ট্রি নেই",
+    "no_entries_msg": "প্রথম এন্ট্রি তৈরি করুন এবং এখানে দেখুন।",
+    "no_matching": "কোনো মিল পাওয়া যায়নি",
+    "no_matching_msg": "সার্চ বা তারিখ ফিল্টার পরিবর্তন করে দেখুন।",
+    "search_placeholder": "উৎপাদন খুঁজুন...",
+    "filter_all": "সব",
+    "filter_pending": "অপেক্ষমান",
+    "filter_approved": "অনুমোদিত",
+    "filter_rejected": "প্রত্যাখ্যাত",
+    "filter_correction": "সংশোধন",
+    "last_updated": "সর্বশেষ আপডেট",
+    "correction_required": "সংশোধন প্রয়োজন",
+    "rejection_reason": "বাতিল করার কারণ",
+    "approved_by": "{{name}} দ্বারা অনুমোদিত",
+    "delete_success": "উৎপাদন সফলভাবে মুছে ফেলা হয়েছে",
+    "update_success": "উৎপাদন সফলভাবে আপডেট করা হয়েছে!",
+    "approved_edit_error": "অনুমোদিত এন্ট্রি পরিবর্তন করা সম্ভব নয়",
+    "not_found": "উৎপাদন পাওয়া যায়নি"
+  },
+  "status": {
+    "pending": "অপেক্ষমান",
+    "approved": "অনুমোদিত",
+    "rejected": "প্রত্যাখ্যাত",
+    "correction": "সংশোধন"
+  },
+  "shift": {
+    "day": "দিনের শিফট",
+    "night": "রাতের শিফট"
+  }
+}

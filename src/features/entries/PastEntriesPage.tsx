@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, Variants } from 'framer-motion';
+import { motion, Variants, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { useEntriesStore } from '../../store/entriesStore';
 import { getEntriesByOperator } from '../../services/entries.service';
@@ -11,7 +12,6 @@ import { EmptyState } from '../../components/feedback/EmptyState';
 import { ErrorState } from '../../components/feedback/ErrorState';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import type { EntryStatus } from '../../types';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -26,22 +26,23 @@ const itemVariants: Variants = {
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 };
 
-const FILTER_OPTIONS: { value: string; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'correction_requested', label: 'Correction' },
-];
-
 export const PastEntriesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { profile } = useAuthStore();
   const { entries, loading, error, setEntries, setLoading, setError } = useEntriesStore();
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+
+  const FILTER_OPTIONS = [
+    { value: 'all', label: t('history.filter_all') || 'All' },
+    { value: 'pending', label: t('history.filter_pending') || 'Pending' },
+    { value: 'approved', label: t('history.filter_approved') || 'Approved' },
+    { value: 'rejected', label: t('history.filter_rejected') || 'Rejected' },
+    { value: 'correction_requested', label: t('history.filter_correction') || 'Correction' },
+  ];
 
   const fetchEntries = async () => {
     if (!profile) return;
@@ -50,7 +51,7 @@ export const PastEntriesPage: React.FC = () => {
       const data = await getEntriesByOperator(profile.uid);
       setEntries(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load entries');
+      setError(err.message || t('common.error'));
     }
   };
 
@@ -74,30 +75,30 @@ export const PastEntriesPage: React.FC = () => {
   const hasActiveFilters = filter !== 'all' || searchTerm !== '' || fromDate !== '' || toDate !== '';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <MobileHeader title="Past Productions" />
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-colors duration-300">
+      <MobileHeader title={t('history.title')} />
 
-      <div className="px-5 py-4 max-w-lg mx-auto">
+      <div className="px-5 py-6 max-w-lg mx-auto">
         {/* Search */}
-        <div className="relative mb-4">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <div className="relative mb-6">
+          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
             type="text"
-            placeholder="Search productions..."
+            placeholder={t('history.search_placeholder') || "Search productions..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-11 bg-white border border-gray-200 rounded-xl pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full h-12 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-border rounded-xl pl-11 pr-4 text-sm font-medium text-gray-900 dark:text-emerald-50 placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-emerald-500/20 shadow-sm transition-all"
           />
         </div>
 
         {/* Date Filters */}
-        <div className="flex gap-3 mb-4">
+        <div className="flex gap-4 mb-6">
           <div className="flex-1">
             <Input 
               type="date" 
-              label="From Date" 
+              label={t('entry.date_from') || "From Date"} 
               value={fromDate} 
               onChange={(e) => setFromDate(e.target.value)} 
             />
@@ -105,7 +106,7 @@ export const PastEntriesPage: React.FC = () => {
           <div className="flex-1">
             <Input 
               type="date" 
-              label="To Date" 
+              label={t('entry.date_to') || "To Date"} 
               value={toDate} 
               onChange={(e) => setToDate(e.target.value)} 
             />
@@ -113,16 +114,16 @@ export const PastEntriesPage: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-1 px-1">
           {FILTER_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setFilter(opt.value)}
               className={`
-                flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors
+                flex-shrink-0 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all
                 ${filter === opt.value
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-white text-gray-600 border border-gray-200'
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
+                  : 'bg-white dark:bg-dark-surface text-gray-400 dark:text-gray-600 border border-gray-100 dark:border-dark-border'
                 }
               `}
             >
@@ -132,41 +133,49 @@ export const PastEntriesPage: React.FC = () => {
         </div>
 
         {/* Productions List */}
-        {loading ? (
-          <LoadingView message="Loading productions..." />
-        ) : error ? (
-          <ErrorState message={error} onRetry={fetchEntries} />
-        ) : filteredEntries.length === 0 ? (
-          <EmptyState
-            title={hasActiveFilters ? 'No matching productions' : 'No productions yet'}
-            message={hasActiveFilters ? 'Try clearing your search or date filters.' : 'Create your first production.'}
-            action={
-              !hasActiveFilters ? (
-                <Button size="sm" onClick={() => navigate('/entries/new')}>Create Production</Button>
-              ) : (
-                <Button size="sm" variant="secondary" onClick={() => {
-                  setFilter('all');
-                  setSearchTerm('');
-                  setFromDate('');
-                  setToDate('');
-                }}>Clear Filters</Button>
-              )
-            }
-          />
-        ) : (
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="space-y-3 pb-4"
-          >
-            {filteredEntries.map((entry) => (
-              <motion.div key={entry.id} variants={itemVariants}>
-                <EntryCard entry={entry} />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+        <div className="mt-4">
+          {loading ? (
+            <LoadingView message={t('common.loading')} />
+          ) : error ? (
+            <ErrorState message={error} onRetry={fetchEntries} />
+          ) : filteredEntries.length === 0 ? (
+            <EmptyState
+              title={hasActiveFilters ? t('history.no_matching') : t('history.no_entries')}
+              message={hasActiveFilters ? t('history.no_matching_msg') : t('history.no_entries_msg')}
+              action={
+                !hasActiveFilters ? (
+                  <Button size="sm" onClick={() => navigate('/entries/new')}>{t('entry.new_title')}</Button>
+                ) : (
+                  <Button size="sm" variant="secondary" className="dark:bg-dark-surface dark:text-emerald-50" onClick={() => {
+                    setFilter('all');
+                    setSearchTerm('');
+                    setFromDate('');
+                    setToDate('');
+                  }}>{t('common.clear_filters') || "Clear Filters"}</Button>
+                )
+              }
+            />
+          ) : (
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="space-y-4 pb-10"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredEntries.map((entry) => (
+                  <motion.div 
+                    key={entry.id} 
+                    variants={itemVariants}
+                    layout
+                  >
+                    <EntryCard entry={entry} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );

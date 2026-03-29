@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { getEntryById, deleteEntry } from '../../services/entries.service';
 import { deleteEntryImage } from '../../services/storage.service';
@@ -16,6 +17,7 @@ import type { ProductionEntry } from '../../types';
 export const EntryDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { profile } = useAuthStore();
   const [entry, setEntry] = useState<ProductionEntry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,12 +32,12 @@ export const EntryDetailsPage: React.FC = () => {
     try {
       const data = await getEntryById(id);
       if (!data || data.operatorUid !== profile?.uid) {
-        setError('Production not found');
+        setError(t('history.not_found') || 'Production not found');
         return;
       }
       setEntry(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load entry');
+      setError(err.message || t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -52,65 +54,67 @@ export const EntryDetailsPage: React.FC = () => {
     try {
       if (entry.imagePath) await deleteEntryImage(entry.imagePath);
       await deleteEntry(entry.id);
-      setToast({ message: 'Production deleted successfully', type: 'success' });
+      setToast({ message: t('history.delete_success') || 'Deleted successfully', type: 'success' });
       setTimeout(() => navigate('/entries', { replace: true }), 1500);
     } catch {
-      setToast({ message: 'Failed to delete entry', type: 'error' });
+      setToast({ message: t('common.error'), type: 'error' });
     } finally {
       setDeleting(false);
       setShowDeleteDialog(false);
     }
   };
 
-  if (loading) return <LoadingView message="Loading entry..." />;
-  if (error || !entry) return <ErrorState message={error || 'Production not found'} onRetry={fetchEntry} />;
+  if (loading) return <LoadingView message={t('common.loading')} />;
+  if (error || !entry) return <ErrorState message={error || t('history.not_found')} onRetry={fetchEntry} />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <MobileHeader title="Production Details" onBack={() => navigate(-1)} />
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-colors duration-300">
+      <MobileHeader title={t('history.details_title') || "Production Details"} onBack={() => navigate(-1)} />
 
-      <div className="px-5 py-4 max-w-lg mx-auto space-y-4">
+      <div className="px-5 py-6 max-w-lg mx-auto space-y-6">
         {/* Status & Date Header */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-3">
+        <div className="bg-white dark:bg-dark-surface rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-dark-border">
+          <div className="flex items-center justify-between mb-4">
             <StatusChip status={entry.status} size="md" />
-            <span className="text-xs text-gray-400">{formatDateTime(entry.submittedAt)}</span>
+            <span className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">{formatDateTime(entry.submittedAt)}</span>
           </div>
-          <h2 className="text-lg font-bold text-gray-900">{entry.productName}</h2>
-          <p className="text-sm text-gray-500 mt-1">Machine {entry.machineNo}</p>
+          <h2 className="text-xl font-black text-gray-900 dark:text-emerald-50 leading-tight">{entry.productName}</h2>
+          <p className="text-[10px] font-black text-gray-400 dark:text-gray-600 mt-2.5 uppercase tracking-[0.2em]">
+            {t('entry.machine')}: {entry.machineNo}
+          </p>
         </div>
 
         {/* Image */}
         {entry.imageUrl && (
-          <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-            <img src={entry.imageUrl} alt="Production" className="w-full h-56 object-cover" />
+          <div className="bg-white dark:bg-dark-surface rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 dark:border-dark-border">
+            <img src={entry.imageUrl} alt="Production" className="w-full h-64 object-cover" />
           </div>
         )}
 
         {/* Details Grid */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-3">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Details</h3>
-          <DetailRow label="Operator" value={entry.operatorName} />
-          {entry.employeeId && <DetailRow label="Employee ID" value={entry.employeeId} />}
-          <DetailRow label="Quantity" value={`${entry.quantity} ${entry.unit}`} />
+        <div className="bg-white dark:bg-dark-surface rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-dark-border space-y-4">
+          <h3 className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.2em] mb-2">{t('profile.details')}</h3>
+          <DetailRow label={t('profile.operator')} value={entry.operatorName} />
+          {entry.employeeId && <DetailRow label={t('profile.emp_id')} value={entry.employeeId} />}
+          <DetailRow label={t('entry.quantity_box')} value={`${entry.quantity} ${t(`common.${entry.unit.toLowerCase()}`) || entry.unit}`} />
           {entry.quantity2 && entry.unit2 && (
-            <DetailRow label="Secondary Quantity" value={`${entry.quantity2} ${entry.unit2}`} />
+            <DetailRow label={t('entry.quantity_pcs')} value={`${entry.quantity2} ${t(`common.${entry.unit2.toLowerCase()}`) || entry.unit2}`} />
           )}
-          <DetailRow label="Shift" value={entry.shift} />
-          <DetailRow label="Production Date" value={entry.productionDate} />
-          {entry.notes && <DetailRow label="Notes" value={entry.notes} />}
+          <DetailRow label={t('entry.shift')} value={entry.shift.toLowerCase().includes('day') ? t('shift.day') : t('shift.night')} />
+          <DetailRow label={t('entry.date')} value={entry.productionDate} />
+          {entry.notes && <DetailRow label={t('entry.notes')} value={entry.notes} />}
           {entry.updatedAt && (
-            <DetailRow label="Last Updated" value={formatDateTime(entry.updatedAt)} />
+            <DetailRow label={t('history.last_updated')} value={formatDateTime(entry.updatedAt)} />
           )}
         </div>
 
         {/* Rejection / Correction Message */}
         {(entry.rejectionReason || entry.correctionMessage) && (
-          <div className="bg-red-50 rounded-2xl p-5 border border-red-100">
-            <h3 className="text-sm font-semibold text-red-700 mb-2">
-              {entry.status === 'correction_requested' ? 'Correction Requested' : 'Rejection Reason'}
+          <div className="bg-red-50 dark:bg-red-950/20 rounded-[1.5rem] p-5 border border-red-100 dark:border-red-900/30">
+            <h3 className="text-xs font-black text-red-700 dark:text-red-400 uppercase tracking-widest mb-2">
+              {entry.status === 'correction_requested' ? t('history.correction_required') : t('history.rejection_reason')}
             </h3>
-            <p className="text-sm text-red-600">
+            <p className="text-sm font-medium text-red-600 dark:text-red-300">
               {entry.correctionMessage || entry.rejectionReason}
             </p>
           </div>
@@ -118,17 +122,17 @@ export const EntryDetailsPage: React.FC = () => {
 
         {/* Approval Info */}
         {entry.status === 'approved' && entry.approvedBy && (
-          <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
-            <h3 className="text-sm font-semibold text-emerald-700 mb-1">Approved</h3>
-            <p className="text-sm text-emerald-600">
-              By {entry.approvedBy} on {formatDateTime(entry.approvedAt)}
+          <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-[1.5rem] p-5 border border-emerald-100 dark:border-emerald-900/30">
+            <h3 className="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-1.5">{t('profile.approved')}</h3>
+            <p className="text-sm font-medium text-emerald-600 dark:text-emerald-300">
+              {t('history.approved_by', { name: entry.approvedBy })} {formatDateTime(entry.approvedAt)}
             </p>
           </div>
         )}
 
         {/* Action Buttons */}
         {(canEdit || canDelete) && (
-          <div className="flex gap-3 pt-2 pb-6">
+          <div className="flex gap-4 pt-4 pb-10">
             {canEdit && (
               <Button
                 variant="secondary"
@@ -139,8 +143,9 @@ export const EntryDetailsPage: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 }
+                className="!py-4 !rounded-2xl dark:bg-dark-surface dark:text-emerald-50 dark:border-dark-border"
               >
-                Edit
+                {t('common.edit')}
               </Button>
             )}
             {canDelete && (
@@ -153,8 +158,9 @@ export const EntryDetailsPage: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 }
+                className="!py-4 !rounded-2xl"
               >
-                Delete
+                {t('common.delete')}
               </Button>
             )}
           </div>
@@ -163,9 +169,9 @@ export const EntryDetailsPage: React.FC = () => {
 
       <ConfirmDialog
         open={showDeleteDialog}
-        title="Delete Production"
-        message="Are you sure you want to delete this production? This action cannot be undone."
-        confirmLabel="Delete"
+        title={t('common.confirm_delete') || "Delete Production"}
+        message={t('common.confirm_delete_msg') || "Are you sure you want to delete this production?"}
+        confirmLabel={t('common.delete')}
         variant="danger"
         loading={deleting}
         onConfirm={handleDelete}
@@ -180,8 +186,8 @@ export const EntryDetailsPage: React.FC = () => {
 };
 
 const DetailRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div className="flex justify-between items-start py-2 border-b border-gray-50 last:border-0">
-    <span className="text-sm text-gray-500 flex-shrink-0">{label}</span>
-    <span className="text-sm font-medium text-gray-900 text-right ml-4">{value}</span>
+  <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800 last:border-0">
+    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest flex-shrink-0">{label}</span>
+    <span className="text-sm font-black text-gray-900 dark:text-emerald-50 text-right ml-4">{value}</span>
   </div>
 );

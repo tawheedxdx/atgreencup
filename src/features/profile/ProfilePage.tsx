@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, Variants } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
+import { useSettingsStore, Language, Theme } from '../../store/settingsStore';
 import { MobileHeader } from '../../components/layout/MobileHeader';
 import { Button } from '../../components/ui/Button';
 import { ConfirmDialog } from '../../components/feedback/ConfirmDialog';
+import { getEfficiencyStats } from '../../services/entries.service';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -19,11 +22,12 @@ const itemVariants: Variants = {
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
 };
 
-import { getEfficiencyStats } from '../../services/entries.service';
-
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { profile, logout } = useAuthStore();
+  const { theme, language, setTheme, setLanguage } = useSettingsStore();
+  
   const [showLogout, setShowLogout] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [efficiency, setEfficiency] = useState<{ percentage: number; total: number; approved: number; rejected: number } | null>(null);
@@ -52,9 +56,15 @@ export const ProfilePage: React.FC = () => {
 
   if (!profile) return null;
 
+  const languages: { code: Language; label: string }[] = [
+    { code: 'en', label: 'English' },
+    { code: 'hi', label: 'हिंदी' },
+    { code: 'bn', label: 'বাংলা' }
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <MobileHeader title="Profile" />
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-colors duration-300 pb-20">
+      <MobileHeader title={t('nav.profile')} />
 
       <motion.div 
         variants={containerVariants}
@@ -67,22 +77,24 @@ export const ProfilePage: React.FC = () => {
           <motion.div 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="w-24 h-24 bg-gradient-to-tr from-emerald-500 to-emerald-300 rounded-full flex items-center justify-center mb-4 shadow-xl shadow-emerald-500/30 border-4 border-white z-10"
+            className="w-24 h-24 bg-gradient-to-tr from-emerald-500 to-emerald-300 rounded-full flex items-center justify-center mb-4 shadow-xl shadow-emerald-500/30 border-4 border-white dark:border-dark-surface z-10"
           >
             <span className="text-4xl font-extrabold text-white drop-shadow-md">
               {profile.name?.charAt(0)?.toUpperCase() || 'O'}
             </span>
           </motion.div>
-          <motion.h2 variants={itemVariants} className="text-2xl font-bold text-gray-900 tracking-tight">{profile.name}</motion.h2>
-          <motion.p variants={itemVariants} className="text-sm font-medium text-emerald-600 capitalize mt-0.5 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100">
+          <motion.h2 variants={itemVariants} className="text-2xl font-bold text-gray-900 dark:text-emerald-50 tracking-tight text-center">
+            {profile.name}
+          </motion.h2>
+          <motion.p variants={itemVariants} className="text-sm font-medium text-emerald-600 dark:text-emerald-400 capitalize mt-2 px-4 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-full border border-emerald-100 dark:border-emerald-900/50">
             {profile.role}
           </motion.p>
         </motion.div>
 
         {/* Efficiency Card */}
-        <motion.div variants={itemVariants} className="bg-white/80 backdrop-blur-lg rounded-[2.5rem] p-8 shadow-xl shadow-emerald-950/5 border border-white mb-6 flex items-center gap-8 relative overflow-hidden">
+        <motion.div variants={itemVariants} className="bg-white/80 dark:bg-dark-surface/60 backdrop-blur-lg rounded-[2.5rem] p-8 shadow-xl shadow-emerald-950/5 border border-white dark:border-dark-border mb-6 flex items-center gap-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-            <svg className="w-24 h-24 text-emerald-900" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-24 h-24 text-emerald-900 dark:text-emerald-100" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
             </svg>
           </div>
@@ -90,7 +102,7 @@ export const ProfilePage: React.FC = () => {
           {/* Progress Ring */}
           <div className="relative w-24 h-24 flex-shrink-0">
             <svg className="w-full h-full" viewBox="0 0 100 100">
-              <circle className="text-emerald-100" strokeWidth="10" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+              <circle className="text-emerald-100 dark:text-emerald-900/20" strokeWidth="10" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
               <motion.circle
                 className="text-emerald-500"
                 strokeWidth="10"
@@ -107,20 +119,20 @@ export const ProfilePage: React.FC = () => {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl font-black text-gray-900">{efficiency?.percentage || 0}%</span>
+              <span className="text-xl font-black text-gray-900 dark:text-emerald-50">{efficiency?.percentage || 0}%</span>
             </div>
           </div>
 
           <div className="flex-1">
-            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Efficiency Rating</h3>
-            <p className="text-lg font-black text-emerald-900 mb-2">Quality Hub</p>
+            <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-1">{t('profile.rating')}</h3>
+            <p className="text-lg font-black text-emerald-900 dark:text-emerald-100 mb-2">{t('profile.quality_hub')}</p>
             <div className="flex gap-4">
               <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase">Approved</p>
-                <p className="text-sm font-black text-emerald-600">{efficiency?.approved || 0}</p>
+                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">{t('profile.approved')}</p>
+                <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{efficiency?.approved || 0}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase">Rejected</p>
+                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">{t('profile.rejected')}</p>
                 <p className="text-sm font-black text-red-500">{efficiency?.rejected || 0}</p>
               </div>
             </div>
@@ -128,15 +140,15 @@ export const ProfilePage: React.FC = () => {
         </motion.div>
 
         {/* Info Card */}
-        <motion.div variants={itemVariants} className="bg-white/80 backdrop-blur-lg rounded-[2rem] p-6 shadow-sm shadow-gray-200/50 border border-white space-y-5 mb-6">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Account Details</h3>
+        <motion.div variants={itemVariants} className="bg-white/80 dark:bg-dark-surface/60 backdrop-blur-lg rounded-[2rem] p-6 shadow-sm shadow-gray-200/50 border border-white dark:border-dark-border space-y-5 mb-6">
+          <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">{t('profile.details')}</h3>
           <InfoRow
             icon={
               <svg className="w-5 h-5 text-emerald-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             }
-            label="Email Address"
+            label={t('profile.email')}
             value={profile.email}
           />
           {profile.employeeId && (
@@ -146,7 +158,7 @@ export const ProfilePage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0" />
                 </svg>
               }
-              label="Employee ID"
+              label={t('profile.emp_id')}
               value={profile.employeeId}
             />
           )}
@@ -157,23 +169,68 @@ export const ProfilePage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                 </svg>
               }
-              label="Assigned Machines"
+              label={t('profile.machines')}
               value={profile.assignedMachines.join(', ')}
             />
           )}
         </motion.div>
 
+        {/* Global Settings */}
+        <motion.div variants={itemVariants} className="bg-white/80 dark:bg-dark-surface/60 backdrop-blur-lg rounded-[2rem] p-6 shadow-sm shadow-gray-200/50 border border-white dark:border-dark-border mb-6">
+          <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">{t('profile.settings')}</h3>
+          
+          {/* Language Selector */}
+          <div className="mb-6">
+            <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 px-1">{t('profile.language')}</p>
+            <div className="bg-gray-100 dark:bg-dark-bg p-1 rounded-2xl flex gap-1">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code)}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${
+                    language === lang.code 
+                      ? 'bg-white dark:bg-emerald-600 dark:text-white shadow-sm text-emerald-700' 
+                      : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Theme Selector */}
+          <div>
+            <div className="flex items-center justify-between px-1">
+              <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{t('profile.appearance')}</p>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-black uppercase ${theme === 'light' ? 'text-emerald-600' : 'text-gray-400'}`}>{t('profile.light_mode')}</span>
+                <button 
+                  onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                  className="w-12 h-6 bg-gray-200 dark:bg-emerald-900/50 rounded-full relative transition-colors"
+                >
+                  <motion.div 
+                    animate={{ x: theme === 'light' ? 2 : 26 }}
+                    className="absolute top-1 left-0 w-4 h-4 bg-white dark:bg-emerald-400 rounded-full shadow-sm"
+                  />
+                </button>
+                <span className={`text-[10px] font-black uppercase ${theme === 'dark' ? 'text-emerald-400' : 'text-gray-400'}`}>{t('profile.dark_mode')}</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* App Info */}
-        <motion.div variants={itemVariants} className="bg-white/80 backdrop-blur-lg rounded-[2rem] p-6 shadow-sm shadow-gray-200/50 border border-white space-y-5 mb-8">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">System</h3>
+        <motion.div variants={itemVariants} className="bg-white/80 dark:bg-dark-surface/60 backdrop-blur-lg rounded-[2rem] p-6 shadow-sm shadow-gray-200/50 border border-white dark:border-dark-border space-y-5 mb-8">
+          <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">{t('profile.system')}</h3>
           <InfoRow
             icon={
               <svg className="w-5 h-5 text-emerald-500/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
-            label="App Version"
-            value="1.0.0"
+            label={t('profile.version')}
+            value="1.2.0"
           />
           <InfoRow
             icon={
@@ -181,7 +238,7 @@ export const ProfilePage: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             }
-            label="Support Desk"
+            label={t('profile.support')}
             value="Contact your administrator"
           />
         </motion.div>
@@ -192,7 +249,7 @@ export const ProfilePage: React.FC = () => {
             variant="danger"
             fullWidth
             size="lg"
-            className="!rounded-2xl shadow-lg shadow-red-500/20"
+            className="!rounded-[1.5rem] shadow-lg shadow-red-500/10"
             onClick={() => setShowLogout(true)}
             icon={
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,16 +257,16 @@ export const ProfilePage: React.FC = () => {
               </svg>
             }
           >
-            Sign Out
+            {t('profile.sign_out')}
           </Button>
         </motion.div>
       </motion.div>
 
       <ConfirmDialog
         open={showLogout}
-        title="Sign Out"
+        title={t('profile.sign_out')}
         message="Are you sure you want to sign out?"
-        confirmLabel="Sign Out"
+        confirmLabel={t('profile.sign_out')}
         variant="danger"
         loading={loggingOut}
         onConfirm={handleLogout}
@@ -220,13 +277,13 @@ export const ProfilePage: React.FC = () => {
 };
 
 const InfoRow: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
-  <div className="flex items-center gap-4 bg-gray-50/50 p-3 rounded-2xl border border-gray-100 transition-colors hover:bg-emerald-50/50">
-    <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0">
+  <div className="flex items-center gap-4 bg-gray-50/50 dark:bg-dark-bg/40 p-3 rounded-2xl border border-gray-100 dark:border-dark-border transition-colors hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20">
+    <div className="w-10 h-10 rounded-xl bg-white dark:bg-dark-surface shadow-sm border border-gray-100 dark:border-dark-border flex items-center justify-center flex-shrink-0">
       {icon}
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
-      <p className="text-sm font-semibold text-gray-900 truncate">{value}</p>
+      <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">{label}</p>
+      <p className="text-sm font-black text-gray-900 dark:text-emerald-50 truncate">{value}</p>
     </div>
   </div>
 );
