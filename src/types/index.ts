@@ -90,3 +90,5 @@ export interface AuthState {
   error: string | null;
   initialized: boolean;
 }
+
+export * from './chat.types';
