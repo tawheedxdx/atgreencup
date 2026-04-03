@@ -2,17 +2,15 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useChatStore } from '../../store/chatStore';
 
 export const BottomNav: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
-  const unreadCount = useChatStore((s) => s.totalUnread);
 
   const navItems = [
     {
       to: '/dashboard',
-      label: t('nav.dashboard', 'Home'),
+      label: t('nav.dashboard'),
       icon: (
         <svg className="w-6 h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z" />
@@ -20,17 +18,17 @@ export const BottomNav: React.FC = () => {
       ),
     },
     {
-      to: '/entries',
-      label: t('nav.history', 'History'),
+      to: '/trends',
+      label: t('nav.trends'),
       icon: (
         <svg className="w-6 h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
         </svg>
       ),
     },
     {
       to: '/entries/new',
-      label: t('nav.new_entry', 'New'),
+      label: t('nav.new_entry'),
       icon: (
         <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.8} d="M12 4v16m8-8H4" />
@@ -39,18 +37,17 @@ export const BottomNav: React.FC = () => {
       primary: true,
     },
     {
-      to: '/chats',
-      label: 'Chats',
-      badge: unreadCount > 0 ? unreadCount : undefined,
+      to: '/entries',
+      label: t('nav.history'),
       icon: (
         <svg className="w-6 h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
     },
     {
       to: '/profile',
-      label: t('nav.profile', 'Profile'),
+      label: t('nav.profile'),
       icon: (
         <svg className="w-6 h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -97,16 +94,9 @@ export const BottomNav: React.FC = () => {
                   transition={{ type: "spring", stiffness: 400, damping: 28 }}
                 />
               )}
-              <div className="relative z-10">
-                <span className={`transition-all duration-300 block ${active ? 'text-emerald-600 dark:text-emerald-400 scale-110' : 'text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400'}`}>
-                  {item.icon}
-                </span>
-                {item.badge !== undefined && (
-                  <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 min-w-[16px] flex items-center justify-center px-1">
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </span>
-                )}
-              </div>
+              <span className={`transition-all duration-300 z-10 ${active ? 'text-emerald-600 dark:text-emerald-400 scale-110' : 'text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400'}`}>
+                {item.icon}
+              </span>
               <span className={`text-[9px] font-black z-10 transition-colors uppercase tracking-widest ${active ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-600'}`}>
                 {item.label}
               </span>

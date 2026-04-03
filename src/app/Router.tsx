@@ -17,8 +17,6 @@ import { EntryDetailsPage } from '../features/entries/EntryDetailsPage';
 import { EditEntryPage } from '../features/entries/EditEntryPage';
 import { ProfilePage } from '../features/profile/ProfilePage';
 import { TrendsPage } from '../features/trends/TrendsPage';
-import { ChatsListPage } from '../features/chats/ChatsListPage';
-import { ChatConversationPage } from '../features/chats/ChatConversationPage';
 
 export const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
@@ -34,9 +32,6 @@ export const AnimatedRoutes: React.FC = () => {
         <Route path="/welcome" element={
           <ProtectedRoute><WelcomeScreen /></ProtectedRoute>
         } />
-        <Route path="/chats/:id" element={
-          <ProtectedRoute><ChatConversationPage /></ProtectedRoute>
-        } />
 
         {/* Protected routes with app shell (bottom nav) */}
         <Route element={
@@ -49,7 +44,6 @@ export const AnimatedRoutes: React.FC = () => {
           <Route path="/entries/:id" element={<EntryDetailsPage />} />
           <Route path="/entries/:id/edit" element={<EditEntryPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/chats" element={<ChatsListPage />} />
         </Route>
 
         {/* Fallback */}
