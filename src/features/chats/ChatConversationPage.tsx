@@ -95,7 +95,7 @@ export const ChatConversationPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen max-h-[-webkit-fill-available] bg-gray-50 dark:bg-dark-bg relative">
+    <div className="flex flex-col h-[100dvh] bg-gray-50 dark:bg-dark-bg relative overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 dark:bg-dark-surface/95 backdrop-blur-xl border-b border-gray-100 dark:border-dark-border px-4 py-3 pb-safe-top pt-safe-top flex items-center gap-3">
         <button
