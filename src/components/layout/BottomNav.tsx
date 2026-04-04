@@ -46,6 +46,15 @@ export const BottomNav: React.FC = () => {
       ),
     },
     {
+      to: '/issues',
+      label: t('nav.issues'),
+      icon: (
+        <svg className="w-6 h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.999L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16.001c-.77 1.332.192 2.999 1.732 2.999z" />
+        </svg>
+      ),
+    },
+    {
       to: '/profile',
       label: t('nav.profile'),
       icon: (
@@ -61,7 +70,10 @@ export const BottomNav: React.FC = () => {
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto relative px-2">
         {navItems.map((item) => {
           const active = location.pathname === item.to ||
-            (item.to === '/entries' && location.pathname.startsWith('/entries/') && location.pathname !== '/entries/new');
+            (item.to === '/entries' && location.pathname.startsWith('/entries/') && location.pathname !== '/entries/new') ||
+            (item.to === '/issues' && location.pathname.startsWith('/issues/') && location.pathname !== '/issues/new');
+
+          const isIssuesTab = item.to === '/issues';
 
           if (item.primary) {
             return (
@@ -85,19 +97,35 @@ export const BottomNav: React.FC = () => {
             <NavLink
               key={item.to}
               to={item.to}
-              className="flex flex-col items-center justify-center w-16 h-12 relative gap-1 mt-1 transition-all"
+              className="flex flex-col items-center justify-center flex-1 h-12 relative gap-1 mt-1 transition-all min-w-0"
             >
               {active && (
                 <motion.div
                   layoutId="bottom-nav-active"
-                  className="absolute inset-0 bg-emerald-50 dark:bg-emerald-600/20 rounded-2xl"
+                  className={`absolute inset-0 rounded-2xl ${
+                    isIssuesTab
+                      ? 'bg-red-50 dark:bg-red-600/20'
+                      : 'bg-emerald-50 dark:bg-emerald-600/20'
+                  }`}
                   transition={{ type: "spring", stiffness: 400, damping: 28 }}
                 />
               )}
-              <span className={`transition-all duration-300 z-10 ${active ? 'text-emerald-600 dark:text-emerald-400 scale-110' : 'text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400'}`}>
+              <span className={`transition-all duration-300 z-10 ${
+                active
+                  ? isIssuesTab
+                    ? 'text-red-600 dark:text-red-400 scale-110'
+                    : 'text-emerald-600 dark:text-emerald-400 scale-110'
+                  : 'text-gray-400 dark:text-gray-600'
+              }`}>
                 {item.icon}
               </span>
-              <span className={`text-[9px] font-black z-10 transition-colors uppercase tracking-widest ${active ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-600'}`}>
+              <span className={`text-[8px] font-black z-10 transition-colors uppercase tracking-widest truncate max-w-full px-0.5 ${
+                active
+                  ? isIssuesTab
+                    ? 'text-red-700 dark:text-red-400'
+                    : 'text-emerald-700 dark:text-emerald-400'
+                  : 'text-gray-400 dark:text-gray-600'
+              }`}>
                 {item.label}
               </span>
             </NavLink>

@@ -40,3 +40,40 @@ export const deleteEntryImage = async (path: string): Promise<void> => {
     // Silently handle if image already deleted
   }
 };
+
+// ─── Issue photo upload / delete ───────────────────────
+export const uploadIssuePhoto = (
+  issueId: string,
+  file: File,
+  onProgress?: (pct: number) => void
+): Promise<UploadResult> => {
+  return new Promise((resolve, reject) => {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `issues/${issueId}/photo.${ext}`;
+    const storageRef = ref(storage, path);
+    const task = uploadBytesResumable(storageRef, file);
+
+    task.on(
+      'state_changed',
+      snap => {
+        const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
+        onProgress?.(pct);
+      },
+      reject,
+      async () => {
+        const url = await getDownloadURL(task.snapshot.ref);
+        resolve({ url, path });
+      }
+    );
+  });
+};
+
+export const deleteIssuePhoto = async (path: string): Promise<void> => {
+  if (!path) return;
+  try {
+    await deleteObject(ref(storage, path));
+  } catch {
+    // Silently handle if already deleted
+  }
+};
+

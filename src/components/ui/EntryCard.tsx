@@ -14,7 +14,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const localizedShift = entry.shift.toLowerCase().includes('day') ? t('shift.day') : t('shift.night');
+  const localizedShift = t(`shift.${entry.shift.toLowerCase()}`) || entry.shift;
 
   return (
     <motion.div

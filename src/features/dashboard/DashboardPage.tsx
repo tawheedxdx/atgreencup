@@ -5,13 +5,15 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { getTodayProductionStats, getMonthProductionStats, getEntriesByOperator } from '../../services/entries.service';
+import { getMyIssues } from '../../services/issues.service';
 import { SummaryCard } from '../../components/ui/SummaryCard';
 import { EntryCard } from '../../components/ui/EntryCard';
+import { IssueCard } from '../../components/ui/IssueCard';
 import { Button } from '../../components/ui/Button';
 import { LoadingView } from '../../components/feedback/LoadingView';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { PageTransition } from '../../components/layout/PageTransition';
-import type { ProductionEntry } from '../../types';
+import type { ProductionEntry, IssueReport } from '../../types';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -36,6 +38,7 @@ export const DashboardPage: React.FC = () => {
     loading: statsLoading, setStats, setLoading 
   } = useDashboardStore();
   const [recentEntries, setRecentEntries] = useState<ProductionEntry[]>([]);
+  const [activeIssues, setActiveIssues] = useState<IssueReport[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
 
   useEffect(() => {
@@ -44,6 +47,7 @@ export const DashboardPage: React.FC = () => {
       setLoading(true);
       setLoadingRecent(true);
       try {
+        // 1. Fetch production data
         const [todayStats, monthStats, entries] = await Promise.all([
           getTodayProductionStats(profile.uid),
           getMonthProductionStats(profile.uid),
@@ -51,9 +55,18 @@ export const DashboardPage: React.FC = () => {
         ]);
         setStats({ ...todayStats, ...monthStats });
         setRecentEntries(entries.slice(0, 5));
+
+        // 2. Fetch issues (decoupled so failure doesn't block dashboard)
+        try {
+          const issues = await getMyIssues(profile.uid);
+          setActiveIssues(issues.filter(i => i.status === 'open' || i.status === 'in_review').slice(0, 2));
+        } catch (issueErr) {
+          console.warn('Issues fetch failed (check indexes):', issueErr);
+        }
       } catch (err) {
-        console.error('Dashboard fetch error:', err);
+        console.error('Dashboard production fetch error:', err);
       } finally {
+        setLoading(false);
         setLoadingRecent(false);
       }
     };
@@ -91,12 +104,16 @@ export const DashboardPage: React.FC = () => {
             </motion.button>
           </div>
 
-          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }} 
+            animate={{ y: 0, opacity: 1 }} 
+            transition={{ delay: 0.4 }}
+            className="flex gap-3"
+          >
             <Button
               onClick={() => navigate('/entries/new')}
-              fullWidth
+              className="flex-[2] !bg-white dark:!bg-emerald-500 !text-emerald-800 dark:!text-emerald-950 !font-black !rounded-2xl shadow-xl shadow-emerald-900/20"
               size="lg"
-              className="!bg-white dark:!bg-emerald-500 !text-emerald-800 dark:!text-emerald-950 !font-black !rounded-2xl shadow-xl shadow-emerald-900/20"
               icon={
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -105,6 +122,16 @@ export const DashboardPage: React.FC = () => {
             >
               {t('entry.new_title')}
             </Button>
+            <Button
+              onClick={() => navigate('/issues/new')}
+              className="flex-1 !bg-red-500/10 backdrop-blur-md !text-white dark:!text-red-400 !font-black !rounded-2xl border-2 border-white/20 dark:border-red-500/20"
+              size="lg"
+              icon={
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.999L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16.001c-.77 1.332.192 2.999 1.732 2.999z" />
+                </svg>
+              }
+            />
           </motion.div>
         </div>
       </motion.div>
@@ -225,6 +252,34 @@ export const DashboardPage: React.FC = () => {
             </motion.div>
           )}
         </section>
+
+        {/* Active Issues Section */}
+        {activeIssues.length > 0 && (
+          <section className="mt-10">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}
+              className="flex items-center justify-between mb-5 px-1"
+            >
+              <h2 className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-[0.2em]">{t('issue.title')}</h2>
+              <button onClick={() => navigate('/issues')} className="text-[10px] text-red-600 font-black uppercase tracking-widest active:opacity-70 transition-opacity">
+                {t('dashboard.view_all')}
+              </button>
+            </motion.div>
+
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="space-y-4"
+            >
+              {activeIssues.map((issue) => (
+                <motion.div key={issue.id} variants={itemVariants}>
+                  <IssueCard issue={issue} />
+                </motion.div>
+              ))}
+            </motion.div>
+          </section>
+        )}
 
         {/* Recent Productions */}
         <section className="mt-10 mb-8">

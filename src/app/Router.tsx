@@ -17,6 +17,9 @@ import { EntryDetailsPage } from '../features/entries/EntryDetailsPage';
 import { EditEntryPage } from '../features/entries/EditEntryPage';
 import { ProfilePage } from '../features/profile/ProfilePage';
 import { TrendsPage } from '../features/trends/TrendsPage';
+import { IssuesPage } from '../features/issues/IssuesPage';
+import { ReportIssuePage } from '../features/issues/ReportIssuePage';
+import { IssueDetailsPage } from '../features/issues/IssueDetailsPage';
 
 export const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
@@ -44,6 +47,10 @@ export const AnimatedRoutes: React.FC = () => {
           <Route path="/entries/:id" element={<EntryDetailsPage />} />
           <Route path="/entries/:id/edit" element={<EditEntryPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/issues" element={<IssuesPage />} />
+          <Route path="/issues/new" element={<ReportIssuePage />} />
+          <Route path="/issues/:id" element={<IssueDetailsPage />} />
+          <Route path="/issues/:id/edit" element={<ReportIssuePage />} />
         </Route>
 
         {/* Fallback */}

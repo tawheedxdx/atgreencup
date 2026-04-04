@@ -100,7 +100,7 @@ export const EntryDetailsPage: React.FC = () => {
           {entry.quantity2 && entry.unit2 && (
             <DetailRow label={t('entry.quantity_pcs')} value={`${entry.quantity2} ${t(`common.${entry.unit2.toLowerCase()}`) || entry.unit2}`} />
           )}
-          <DetailRow label={t('entry.shift')} value={entry.shift.toLowerCase().includes('day') ? t('shift.day') : t('shift.night')} />
+          <DetailRow label={t('entry.shift')} value={t(`shift.${entry.shift.toLowerCase()}`) || entry.shift} />
           <DetailRow label={t('entry.date')} value={entry.productionDate} />
           {entry.notes && <DetailRow label={t('entry.notes')} value={entry.notes} />}
           {entry.updatedAt && (
