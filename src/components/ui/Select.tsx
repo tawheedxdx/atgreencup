@@ -24,12 +24,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <select
           ref={ref}
           className={`
-            w-full h-14 bg-gray-50 dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-2xl
+            w-full h-14 bg-white/70 dark:bg-dark-surface/50 backdrop-blur-sm border border-gray-200/60 dark:border-dark-border rounded-[1.25rem]
             px-4 text-gray-900 dark:text-emerald-50 text-base font-medium appearance-none
-            focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-emerald-500/20 focus:border-emerald-500
-            transition-all duration-200
-            ${error ? 'border-red-400 focus:ring-red-500/20 focus:border-red-500' : ''}
-            ${props.disabled ? 'bg-gray-100 dark:bg-dark-bg/50 text-gray-400 cursor-not-allowed' : ''}
+            focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 dark:focus:ring-emerald-500/20 dark:focus:bg-dark-card
+            hover:border-gray-300 dark:hover:border-emerald-900/40 shadow-sm
+            transition-all duration-200 ease-out
+            ${error ? 'border-red-400/60 focus:ring-red-500/20 focus:border-red-500/50 bg-red-50/30 dark:bg-red-950/20' : ''}
+            ${props.disabled ? 'bg-gray-100/50 dark:bg-dark-bg/50 text-gray-400 cursor-not-allowed shadow-none border-dashed' : ''}
             ${className}
           `}
           style={{ 
@@ -40,7 +41,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {...props}
         >
           {placeholder && (
-            <option value="" disabled className="dark:bg-dark-surface">{placeholder}</option>
+            <option value="" disabled className="dark:bg-dark-surface dark:text-gray-400">{placeholder}</option>
           )}
           {options.map((opt) => (
             <option key={opt.value} value={opt.value} className="dark:bg-dark-surface">
@@ -49,9 +50,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
       </div>
-      {error && <p className="mt-1.5 px-1 text-xs font-bold text-red-500">{error}</p>}
+      {error && <p className="mt-2 px-1 text-xs font-bold text-red-500 animate-fade-in">{error}</p>}
     </div>
   )
 );
 
 Select.displayName = 'Select';
+

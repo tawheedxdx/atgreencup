@@ -77,6 +77,13 @@ export const NewEntryPage: React.FC = () => {
   const onSubmit = useCallback(async (data: EntryFormData) => {
     if (submitting) return;
 
+    if (!imageFile) {
+      setImageError(t('entry.error_image_mandatory') || 'Image proof is required');
+      // Scroll to bottom so they can see the error
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      return;
+    }
+
     setSubmitting(true);
     setImageError('');
 
@@ -91,15 +98,13 @@ export const NewEntryPage: React.FC = () => {
         imagePath: '',
       });
 
-      // Upload image only if provided
-      if (imageFile) {
-        try {
-          const compressed = await compressImage(imageFile);
-          const { url, path } = await uploadEntryImage(entryId, compressed, setUploadProgress);
-          await updateEntry(entryId, { imageUrl: url, imagePath: path });
-        } catch (imgErr) {
-          console.warn('Image upload failed, entry saved without image:', imgErr);
-        }
+      // Upload mandatory image
+      try {
+        const compressed = await compressImage(imageFile);
+        const { url, path } = await uploadEntryImage(entryId, compressed, setUploadProgress);
+        await updateEntry(entryId, { imageUrl: url, imagePath: path });
+      } catch (imgErr: any) {
+        throw new Error('Image upload failed: ' + imgErr.message);
       }
 
       setSubmitting(false);
@@ -107,7 +112,7 @@ export const NewEntryPage: React.FC = () => {
       setTimeout(() => navigate('/dashboard', { replace: true }), 1500);
     } catch (err: any) {
       console.error('Submit error:', err);
-      setToast({ message: t('common.error'), type: 'error' });
+      setToast({ message: err?.message || t('common.error'), type: 'error' });
       setSubmitting(false);
     }
   }, [submitting, imageFile, profile, navigate, t]);
