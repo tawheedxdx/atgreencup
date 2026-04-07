@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,8 @@ import { MobileHeader } from '../../components/layout/MobileHeader';
 import { Button } from '../../components/ui/Button';
 import { ConfirmDialog } from '../../components/feedback/ConfirmDialog';
 import { getEfficiencyStats } from '../../services/entries.service';
+import { uploadProfilePhoto } from '../../services/storage.service';
+import { updateUserProfilePhoto } from '../../services/users.service';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -25,13 +27,16 @@ const itemVariants: Variants = {
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { profile, logout } = useAuthStore();
+  const { profile, logout, updateProfile } = useAuthStore();
   const { theme, language, setTheme, setLanguage } = useSettingsStore();
   
   const [showLogout, setShowLogout] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [efficiency, setEfficiency] = useState<{ percentage: number; total: number; approved: number; rejected: number } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (!profile) return;
@@ -54,6 +59,41 @@ export const ProfilePage: React.FC = () => {
     navigate('/login', { replace: true });
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+    
+    // Basic validation
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      setUploadProgress(0);
+      const result = await uploadProfilePhoto(profile.uid, file, (pct) => {
+        setUploadProgress(Math.round(pct));
+      });
+      
+      await updateUserProfilePhoto(profile.uid, result.url);
+      updateProfile({ photoUrl: result.url });
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+      alert('Failed to upload photo. Please try again.');
+    } finally {
+      setUploadingPhoto(false);
+      setUploadProgress(0);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   if (!profile) return null;
 
   const languages: { code: Language; label: string }[] = [
@@ -74,14 +114,38 @@ export const ProfilePage: React.FC = () => {
       >
         {/* Avatar & Name */}
         <motion.div variants={itemVariants} className="flex flex-col items-center mb-8 relative">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handlePhotoUpload} 
+            accept="image/*" 
+            className="hidden" 
+          />
           <motion.div 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="w-24 h-24 bg-gradient-to-tr from-emerald-500 to-emerald-300 rounded-full flex items-center justify-center mb-4 shadow-xl shadow-emerald-500/30 border-4 border-white dark:border-dark-surface z-10"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-24 h-24 bg-gradient-to-tr from-emerald-500 to-emerald-300 rounded-full flex items-center justify-center mb-4 shadow-xl shadow-emerald-500/30 border-4 border-white dark:border-dark-surface z-10 cursor-pointer relative overflow-hidden group"
           >
-            <span className="text-4xl font-extrabold text-white drop-shadow-md">
-              {profile.name?.charAt(0)?.toUpperCase() || 'O'}
-            </span>
+            {profile.photoUrl ? (
+              <img src={profile.photoUrl} alt={profile.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-4xl font-extrabold text-white drop-shadow-md">
+                {profile.name?.charAt(0)?.toUpperCase() || 'O'}
+              </span>
+            )}
+            
+            {/* Upload Overlay */}
+            <div className={`absolute inset-0 bg-black/40 items-center justify-center transition-opacity duration-200 ${uploadingPhoto ? 'flex opacity-100' : 'hidden group-hover:flex md:hidden'}`}>
+              {uploadingPhoto ? (
+                <span className="text-white text-xs font-bold">{uploadProgress}%</span>
+              ) : (
+                <svg className="w-8 h-8 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              )}
+            </div>
           </motion.div>
           <motion.h2 variants={itemVariants} className="text-2xl font-bold text-gray-900 dark:text-emerald-50 tracking-tight text-center">
             {profile.name}

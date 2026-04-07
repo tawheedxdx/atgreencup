@@ -10,6 +10,7 @@ interface AuthStore extends AuthState {
   logout: () => Promise<void>;
   init: () => () => void;
   setError: (error: string | null) => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -18,6 +19,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   loading: true,
   error: null,
   initialized: false,
+
+  updateProfile: (updates) => set((state) => ({
+    profile: state.profile ? { ...state.profile, ...updates } : null
+  })),
 
   setError: (error) => set({ error }),
 

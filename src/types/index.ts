@@ -89,6 +89,7 @@ export interface UserProfile {
   active: boolean;
   assignedMachines: string[];
   assignedProducts: string[];
+  photoUrl?: string;
   createdAt: Timestamp | null;
   lastLoginAt: Timestamp | null;
 }

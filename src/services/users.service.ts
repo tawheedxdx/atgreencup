@@ -11,3 +11,7 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 export const updateLastLogin = async (uid: string): Promise<void> => {
   await updateDoc(doc(db, 'users', uid), { lastLoginAt: serverTimestamp() });
 };
+
+export const updateUserProfilePhoto = async (uid: string, photoUrl: string): Promise<void> => {
+  await updateDoc(doc(db, 'users', uid), { photoUrl });
+};

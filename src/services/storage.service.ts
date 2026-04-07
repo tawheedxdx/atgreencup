@@ -77,3 +77,39 @@ export const deleteIssuePhoto = async (path: string): Promise<void> => {
   }
 };
 
+// ─── Profile photo upload / delete ───────────────────────
+export const uploadProfilePhoto = (
+  uid: string,
+  file: File,
+  onProgress?: (pct: number) => void
+): Promise<UploadResult> => {
+  return new Promise((resolve, reject) => {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `profiles/${uid}/photo.${ext}`;
+    const storageRef = ref(storage, path);
+    const task = uploadBytesResumable(storageRef, file);
+
+    task.on(
+      'state_changed',
+      snap => {
+        const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
+        onProgress?.(pct);
+      },
+      reject,
+      async () => {
+        const url = await getDownloadURL(task.snapshot.ref);
+        resolve({ url, path });
+      }
+    );
+  });
+};
+
+export const deleteProfilePhoto = async (path: string): Promise<void> => {
+  if (!path) return;
+  try {
+    await deleteObject(ref(storage, path));
+  } catch {
+    // Silently handle if already deleted
+  }
+};
+
