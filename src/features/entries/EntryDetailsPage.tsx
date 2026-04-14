@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { getEntryById, deleteEntry } from '../../services/entries.service';
+import { getEntryEarning } from '../../services/earnings.service';
 import { deleteEntryImage } from '../../services/storage.service';
 import { MobileHeader } from '../../components/layout/MobileHeader';
 import { StatusChip } from '../../components/ui/StatusChip';
@@ -12,7 +13,7 @@ import { ErrorState } from '../../components/feedback/ErrorState';
 import { ConfirmDialog } from '../../components/feedback/ConfirmDialog';
 import { Toast } from '../../components/feedback/Toast';
 import { formatDateTime } from '../../utils/helpers';
-import type { ProductionEntry } from '../../types';
+import type { ProductionEntry, Earning } from '../../types';
 
 export const EntryDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +21,8 @@ export const EntryDetailsPage: React.FC = () => {
   const { t } = useTranslation();
   const { profile } = useAuthStore();
   const [entry, setEntry] = useState<ProductionEntry | null>(null);
+  const [earning, setEarning] = useState<Earning | null>(null);
+  const [loadingEarning, setLoadingEarning] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -36,6 +39,13 @@ export const EntryDetailsPage: React.FC = () => {
         return;
       }
       setEntry(data);
+      if (data.status === 'approved' && data.id) {
+        setLoadingEarning(true);
+        getEntryEarning(data.id)
+          .then(setEarning)
+          .catch(console.error)
+          .finally(() => setLoadingEarning(false));
+      }
     } catch (err: any) {
       setError(err.message || t('common.error'));
     } finally {
@@ -107,6 +117,40 @@ export const EntryDetailsPage: React.FC = () => {
             <DetailRow label={t('history.last_updated')} value={formatDateTime(entry.updatedAt)} />
           )}
         </div>
+
+        {/* Earnings Details */}
+        {entry.status === 'approved' ? (
+          <div className="bg-white dark:bg-dark-surface rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-dark-border space-y-4">
+            <h3 className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.2em] mb-2">Earnings Calculation</h3>
+            {loadingEarning ? (
+               <p className="text-sm text-gray-500">Loading calculation...</p>
+            ) : earning ? (
+               <>
+                 <DetailRow label="Machine" value={earning.machineNo} />
+                 <DetailRow label="Quantity" value={`${earning.quantity} ${earning.unit}`} />
+                 <DetailRow label="Rate" value={`₹${earning.rateAmount} / ${earning.ratePerQuantity} ${earning.unit}`} />
+                 <div className="flex justify-between items-center py-3 border-t border-gray-50 dark:border-gray-800 mt-2">
+                   <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Earning</span>
+                   <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 text-right">₹{earning.calculatedAmount.toFixed(2)}</span>
+                 </div>
+                 <div className="flex justify-between items-center py-2">
+                   <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Status</span>
+                   <span className={`px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-widest ${earning.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'}`}>
+                     {earning.paymentStatus.replace('_', ' ')}
+                   </span>
+                 </div>
+               </>
+            ) : (
+               <p className="text-sm text-gray-500 font-medium pb-2">No earning record found for this entry.</p>
+            )}
+          </div>
+        ) : (
+          <div className="bg-gray-50 dark:bg-dark-surface rounded-[1.5rem] p-5 border border-dashed border-gray-300 dark:border-dark-border text-center">
+             <p className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+               Earning will be calculated after approval
+             </p>
+          </div>
+        )}
 
         {/* Rejection / Correction Message */}
         {(entry.rejectionReason || entry.correctionMessage) && (

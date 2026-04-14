@@ -92,6 +92,10 @@ export interface UserProfile {
   photoUrl?: string;
   createdAt: Timestamp | null;
   lastLoginAt: Timestamp | null;
+  /** Admin-assigned earnings period — operator cannot override this */
+  earningsPeriodType?: 'weekly' | 'monthly';
+  /** Legacy user preference (ignored for period restriction) */
+  earningsViewPreference?: 'weekly' | 'monthly';
 }
 
 // ─── Production Entry ────────────────────────────────────────
@@ -149,6 +153,33 @@ export interface Shift {
   name: string;
   code: string;
   active: boolean;
+}
+
+// ─── Earnings ────────────────────────────────────────────────
+export type EarningPeriodType = 'weekly' | 'monthly';
+export type PaymentStatus = 'pending_payment' | 'paid' | 'not_payable';
+
+export interface Earning {
+  id?: string;
+  entryId: string;
+  operatorUid: string;
+  operatorName: string;
+  employeeId: string;
+  machineNo: string;
+  productName: string;
+  quantity: number;
+  unit: string;
+  productionDate: string;
+  approvedAt: Timestamp | null;
+  rateAmount: number;
+  ratePerQuantity: number;
+  calculatedAmount: number;
+  currency: string;
+  periodType: EarningPeriodType;
+  periodKey: string;
+  paymentStatus: PaymentStatus;
+  paidAt?: Timestamp | null;
+  paymentNote?: string;
 }
 
 // ─── Auth ────────────────────────────────────────────────────

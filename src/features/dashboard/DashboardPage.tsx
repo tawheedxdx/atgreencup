@@ -6,6 +6,8 @@ import { useAuthStore } from '../../store/authStore';
 import { useDashboardStore } from '../../store/dashboardStore';
 import { getTodayProductionStats, getMonthProductionStats, getEntriesByOperator } from '../../services/entries.service';
 import { getMyIssues } from '../../services/issues.service';
+import { useEarningsStore } from '../../store/earningsStore';
+import { PeriodRestrictedWarning } from '../../components/feedback/PeriodRestrictedWarning';
 import { SummaryCard } from '../../components/ui/SummaryCard';
 import { EntryCard } from '../../components/ui/EntryCard';
 import { IssueCard } from '../../components/ui/IssueCard';
@@ -40,6 +42,30 @@ export const DashboardPage: React.FC = () => {
   const [recentEntries, setRecentEntries] = useState<ProductionEntry[]>([]);
   const [activeIssues, setActiveIssues] = useState<IssueReport[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
+
+  const {
+    assignedPeriod,
+    selectedPeriod,
+    isRestricted,
+    forecasted,
+    paid,
+    unpaid,
+    loading: earningsLoading,
+    initPeriod,
+    selectPeriod,
+  } = useEarningsStore();
+
+  // Bootstrap earnings from admin-assigned period
+  useEffect(() => {
+    if (profile?.uid) {
+      initPeriod(profile.earningsPeriodType, profile.uid);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.uid]);
+
+  const handlePeriodToggle = (type: 'weekly' | 'monthly') => {
+    selectPeriod(type);
+  };
 
   useEffect(() => {
     if (!profile) return;
@@ -137,6 +163,73 @@ export const DashboardPage: React.FC = () => {
       </motion.div>
 
       <div className="px-5 max-w-lg mx-auto -mt-6 relative z-20">
+        {/* Earnings Summary Section */}
+        <section className="mt-8 bg-white dark:bg-dark-surface rounded-[2rem] p-5 shadow-lg border border-gray-100 dark:border-dark-border">
+          {/* Section header + period toggle */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em]">
+              {selectedPeriod === 'weekly' ? 'Weekly Earnings' : 'Monthly Earnings'}
+            </h2>
+            <div className="flex bg-gray-100 dark:bg-dark-bg p-1 rounded-xl">
+              {(['weekly', 'monthly'] as const).map((type) => {
+                const active = selectedPeriod === type;
+                const locked = assignedPeriod !== null && assignedPeriod !== type;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => handlePeriodToggle(type)}
+                    title={locked ? `You are assigned for ${assignedPeriod}` : undefined}
+                    className={[
+                      'text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-colors flex items-center gap-0.5',
+                      active
+                        ? 'bg-white dark:bg-dark-surface text-emerald-600 shadow-sm'
+                        : locked
+                        ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                        : 'text-gray-400',
+                    ].join(' ')}
+                  >
+                    {locked && <span className="text-[8px]">🔒</span>}
+                    {type === 'weekly' ? 'Week' : 'Month'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Restricted warning */}
+          {isRestricted && assignedPeriod && (
+            <PeriodRestrictedWarning assignedPeriod={assignedPeriod} />
+          )}
+
+          {/* Earnings data — only when not restricted */}
+          {!isRestricted && (
+            <>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div
+                  className="bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/20 col-span-2 flex justify-between items-center cursor-pointer"
+                  onClick={() => navigate('/earnings')}
+                >
+                  <div>
+                    <p className="text-[10px] font-black text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-widest mb-1">Forecasted</p>
+                    <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">₹{forecasted.toFixed(2)}</p>
+                  </div>
+                  <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 dark:bg-dark-bg p-4 rounded-2xl border border-gray-100 dark:border-dark-border">
+                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Paid</p>
+                  <p className="text-lg font-black text-gray-800 dark:text-gray-200">₹{paid.toFixed(2)}</p>
+                </div>
+                <div className="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-100 dark:border-orange-800/20">
+                  <p className="text-[9px] font-black text-orange-600/70 uppercase tracking-widest mb-1">Pending</p>
+                  <p className="text-lg font-black text-orange-600 dark:text-orange-400">₹{unpaid.toFixed(2)}</p>
+                </div>
+              </div>
+            </>
+          )}
+        </section>
+
         {/* Stats Grid */}
         <section className="mt-10">
           <motion.h2 

@@ -78,3 +78,22 @@ export const formatTime = (date: any): string => {
 export const todayISO = (): string => {
   return new Date().toISOString().split('T')[0];
 };
+
+export const getISOWeek = (date: Date) => {
+  const tdt = new Date(date.valueOf());
+  const dayn = (date.getDay() + 6) % 7;
+  tdt.setDate(tdt.getDate() - dayn + 3);
+  const firstThursday = tdt.valueOf();
+  tdt.setMonth(0, 1);
+  if (tdt.getDay() !== 4) {
+      tdt.setMonth(0, 1 + ((4 - tdt.getDay()) + 7) % 7);
+  }
+  return 1 + Math.ceil((firstThursday - tdt.valueOf()) / 604800000);
+}
+
+export const getCurrentPeriodKey = (type: 'weekly' | 'monthly'): string => {
+   const d = new Date();
+   if (type === 'monthly') return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+   const week = getISOWeek(d);
+   return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
+};
