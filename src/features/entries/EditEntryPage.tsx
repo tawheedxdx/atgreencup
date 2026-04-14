@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { entrySchema, type EntryFormData } from './entrySchema';
 import { useAuthStore } from '../../store/authStore';
-import { getEntryById, updateEntry, getProducts, getMachines, getUnits, getShifts } from '../../services/entries.service';
+import { getEntryById, updateEntry, validateImageFile, getProducts, getMachines, getUnits, getShifts } from '../../services/entries.service';
 import { uploadEntryImage, deleteEntryImage } from '../../services/storage.service';
 import { compressImage } from '../../utils/helpers';
 import { MobileHeader } from '../../components/layout/MobileHeader';
@@ -86,7 +86,19 @@ export const EditEntryPage: React.FC = () => {
 
   const onSubmit = useCallback(async (data: EntryFormData) => {
     if (submitting || !entry?.id) return;
+
+    // Validate new file if one was selected
+    if (imageFile) {
+      try {
+        validateImageFile(imageFile);
+      } catch (validationErr: any) {
+        setToast({ message: validationErr.message, type: 'error' });
+        return;
+      }
+    }
+
     setSubmitting(true);
+    setUploadProgress(0);
 
     try {
       let imageUrl = existingImageUrl;
@@ -94,10 +106,19 @@ export const EditEntryPage: React.FC = () => {
 
       if (imageFile) {
         const compressed = await compressImage(imageFile);
-        if (entry.imagePath) await deleteEntryImage(entry.imagePath);
+        // Upload the new image FIRST — do NOT delete the old one until upload succeeds
         const result = await uploadEntryImage(entry.id, compressed, setUploadProgress);
         imageUrl = result.url;
         imagePath = result.path;
+        // Only delete the old image after successful upload
+        if (entry.imagePath && entry.imagePath !== imagePath) {
+          await deleteEntryImage(entry.imagePath);
+        }
+      }
+
+      // Safety guard — never update entry without a valid imageUrl
+      if (!imageUrl || !imagePath) {
+        throw new Error('Image is required. Please select a valid image before saving.');
       }
 
       await updateEntry(entry.id, {
@@ -110,7 +131,15 @@ export const EditEntryPage: React.FC = () => {
       setToast({ message: t('history.update_success') || 'Updated successfully!', type: 'success' });
       setTimeout(() => navigate(`/entries/${entry.id}`, { replace: true }), 1500);
     } catch (err: any) {
-      setToast({ message: t('common.error'), type: 'error' });
+      const isUploadError =
+        err?.message?.toLowerCase().includes('upload') ||
+        err?.code === 'storage/unauthorized' ||
+        err?.code === 'storage/canceled';
+      const message = isUploadError
+        ? 'Image upload failed. Entry was NOT saved. Please try again.'
+        : err?.message || t('common.error');
+      setToast({ message, type: 'error' });
+      // DO NOT clear form — allow user to retry
       setSubmitting(false);
     }
   }, [submitting, entry, imageFile, existingImageUrl, navigate, t]);

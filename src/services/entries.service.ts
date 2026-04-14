@@ -1,11 +1,86 @@
 import {
-  collection, doc, addDoc, updateDoc, deleteDoc, getDoc,
+  collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc,
   query, where, orderBy, getDocs, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { uploadEntryImage } from './storage.service';
+import { compressImage } from '../utils/helpers';
 import type { ProductionEntry, Product, Machine, Unit, Shift } from '../types';
 
 const entriesCol = collection(db, 'entries');
+
+// ─── File validation ─────────────────────────────────────────
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+const ALLOWED_IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'];
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+export const validateImageFile = (file: File): void => {
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  const isAllowedType =
+    ALLOWED_IMAGE_TYPES.includes(file.type) || ALLOWED_IMAGE_EXTS.includes(ext);
+  if (!isAllowedType) {
+    throw new Error('Unsupported image format. Please use JPG, PNG, WEBP, or HEIC.');
+  }
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    throw new Error(`Image is too large (${sizeMB} MB). Maximum allowed size is 10 MB.`);
+  }
+};
+
+// ─── Safe orchestrated create: upload FIRST, then write to Firestore ─────────
+/**
+ * createProductionEntry — the ONLY safe way to create a production entry.
+ *
+ * Order of operations (atomic-safe):
+ *   1. Validate file type & size
+ *   2. Pre-generate Firestore doc reference (NO write yet)
+ *   3. Compress + upload image to Storage
+ *   4. Guard: ensure download URL was returned
+ *   5. Write entry to Firestore WITH imageUrl already set
+ *
+ * If any step before (5) throws, Firestore is NEVER touched.
+ */
+export const createProductionEntry = async (
+  data: Omit<
+    ProductionEntry,
+    | 'id' | 'status' | 'submittedAt' | 'updatedAt'
+    | 'approvedAt' | 'approvedBy' | 'rejectionReason' | 'correctionMessage'
+    | 'imageUrl' | 'imagePath'
+  >,
+  file: File,
+  onProgress?: (pct: number) => void
+): Promise<string> => {
+  // 1. Validate file — throws on bad type or size
+  validateImageFile(file);
+
+  // 2. Pre-generate doc ref — collection reference only, NO Firestore write
+  const entryRef = doc(entriesCol);
+
+  // 3. Compress + upload — Firestore is untouched here
+  const compressed = await compressImage(file);
+  const { url, path } = await uploadEntryImage(entryRef.id, compressed, onProgress);
+
+  // 4. Guard — belt-and-suspenders check
+  if (!url || !path) {
+    throw new Error('Image upload failed: could not retrieve download URL.');
+  }
+
+  // 5. ONLY NOW write to Firestore — guaranteed to have a valid imageUrl
+  await setDoc(entryRef, {
+    ...data,
+    imageUrl: url,
+    imagePath: path,
+    status: 'pending',
+    submittedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    approvedAt: null,
+    approvedBy: '',
+    rejectionReason: '',
+    correctionMessage: '',
+  });
+
+  return entryRef.id;
+};
 
 // ─── Helpers ────────────────────────────────────────────────
 const getTodayLoc = () => {

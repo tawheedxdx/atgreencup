@@ -5,9 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { entrySchema, type EntryFormData } from './entrySchema';
 import { useAuthStore } from '../../store/authStore';
-import { createEntry, updateEntry, getProducts, getMachines, getUnits, getShifts } from '../../services/entries.service';
-import { uploadEntryImage } from '../../services/storage.service';
-import { compressImage, todayISO } from '../../utils/helpers';
+import { createProductionEntry, validateImageFile, getProducts, getMachines, getUnits, getShifts } from '../../services/entries.service';
+import { todayISO } from '../../utils/helpers';
 import { MobileHeader } from '../../components/layout/MobileHeader';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
@@ -75,44 +74,57 @@ export const NewEntryPage: React.FC = () => {
   }, [watchProductId, products, setValue]);
 
   const onSubmit = useCallback(async (data: EntryFormData) => {
+    // Prevent double-submit
     if (submitting) return;
 
+    // ── Step 1: Image presence check ──────────────────────────────
     if (!imageFile) {
       setImageError(t('entry.error_image_mandatory') || 'Image proof is required');
-      // Scroll to bottom so they can see the error
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       return;
     }
 
+    // ── Step 2: Client-side file validation (type + size) ─────────
+    try {
+      validateImageFile(imageFile);
+    } catch (validationErr: any) {
+      setImageError(validationErr.message);
+      return;
+    }
+
     setSubmitting(true);
+    setUploadProgress(0);
     setImageError('');
 
     try {
-      // Create entry first to get ID
-      const entryId = await createEntry({
-        ...data,
-        operatorUid: profile!.uid,
-        operatorName: profile!.name,
-        employeeId: profile!.employeeId || '',
-        imageUrl: '',
-        imagePath: '',
-      });
-
-      // Upload mandatory image
-      try {
-        const compressed = await compressImage(imageFile);
-        const { url, path } = await uploadEntryImage(entryId, compressed, setUploadProgress);
-        await updateEntry(entryId, { imageUrl: url, imagePath: path });
-      } catch (imgErr: any) {
-        throw new Error('Image upload failed: ' + imgErr.message);
-      }
+      // ── Step 3 + 4 + 5: Upload → get URL → save (all-or-nothing) ──
+      // createProductionEntry does NOT touch Firestore until image upload succeeds.
+      await createProductionEntry(
+        {
+          ...data,
+          operatorUid: profile!.uid,
+          operatorName: profile!.name,
+          employeeId: profile!.employeeId || '',
+        },
+        imageFile,
+        setUploadProgress
+      );
 
       setSubmitting(false);
       setToast({ message: t('common.success'), type: 'success' });
       setTimeout(() => navigate('/dashboard', { replace: true }), 1500);
     } catch (err: any) {
       console.error('Submit error:', err);
-      setToast({ message: err?.message || t('common.error'), type: 'error' });
+      // Distinguish upload errors from other errors for a clearer message
+      const isUploadError =
+        err?.message?.toLowerCase().includes('upload') ||
+        err?.code === 'storage/unauthorized' ||
+        err?.code === 'storage/canceled';
+      const message = isUploadError
+        ? 'Image upload failed. Entry was NOT saved. Please try again.'
+        : err?.message || t('common.error');
+      setToast({ message, type: 'error' });
+      // DO NOT clear form or image — allow user to retry
       setSubmitting(false);
     }
   }, [submitting, imageFile, profile, navigate, t]);
