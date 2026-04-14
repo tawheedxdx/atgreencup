@@ -294,7 +294,7 @@ export const ProfilePage: React.FC = () => {
               </svg>
             }
             label={t('profile.version')}
-            value="1.2.0"
+            value="2.0.0 (Mega Update)"
           />
           <InfoRow
             icon={
