@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { ConfirmDialog } from '../../components/feedback/ConfirmDialog';
 import { getEfficiencyStats } from '../../services/entries.service';
 import { uploadProfilePhoto } from '../../services/storage.service';
-import { updateUserProfilePhoto } from '../../services/users.service';
+import { updateUserProfilePhoto, updateUserName } from '../../services/users.service';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -37,6 +37,10 @@ export const ProfilePage: React.FC = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [savingName, setSavingName] = useState(false);
 
   React.useEffect(() => {
     if (!profile) return;
@@ -147,9 +151,68 @@ export const ProfilePage: React.FC = () => {
               )}
             </div>
           </motion.div>
-          <motion.h2 variants={itemVariants} className="text-2xl font-bold text-gray-900 dark:text-emerald-50 tracking-tight text-center">
-            {profile.name}
-          </motion.h2>
+          {isEditingName ? (
+            <motion.div variants={itemVariants} className="flex flex-col items-center gap-3 mt-2 w-full max-w-[200px] z-20">
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full bg-white dark:bg-dark-surface border-2 border-emerald-500/50 rounded-xl px-4 py-2 text-center text-lg text-gray-900 dark:text-white font-bold focus:outline-none focus:border-emerald-500 shadow-sm"
+                autoFocus
+              />
+              <div className="flex gap-2 w-full">
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  fullWidth 
+                  onClick={() => setIsEditingName(false)}
+                  disabled={savingName}
+                  className="!rounded-xl"
+                >
+                  {t('common.cancel') || 'Cancel'}
+                </Button>
+                <Button 
+                  size="sm" 
+                  fullWidth 
+                  onClick={async () => {
+                    if (!editName.trim()) return;
+                    setSavingName(true);
+                    try {
+                      await updateUserName(profile.uid, editName.trim());
+                      updateProfile({ name: editName.trim() });
+                      setIsEditingName(false);
+                    } catch (err) {
+                      console.error('Failed to update name:', err);
+                    } finally {
+                      setSavingName(false);
+                    }
+                  }}
+                  loading={savingName}
+                  className="!rounded-xl"
+                >
+                  {t('common.save') || 'Save'}
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div variants={itemVariants} className="flex items-center gap-2 group z-20">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-emerald-50 tracking-tight text-center">
+                {profile.name}
+              </h2>
+              <button 
+                onClick={() => {
+                  setEditName(profile.name || '');
+                  setIsEditingName(true);
+                }}
+                className="p-1.5 text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 bg-gray-100 dark:bg-dark-surface rounded-full transition-all md:opacity-0 md:group-hover:opacity-100"
+                aria-label="Edit name"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+            </motion.div>
+          )}
           <motion.p variants={itemVariants} className="text-sm font-medium text-emerald-600 dark:text-emerald-400 capitalize mt-2 px-4 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-full border border-emerald-100 dark:border-emerald-900/50">
             {profile.role}
           </motion.p>
@@ -294,7 +357,7 @@ export const ProfilePage: React.FC = () => {
               </svg>
             }
             label={t('profile.version')}
-            value="2.0.0 (Mega Update)"
+            value="3.4.0 (Bug Fixed)"
           />
           <InfoRow
             icon={
@@ -303,7 +366,7 @@ export const ProfilePage: React.FC = () => {
               </svg>
             }
             label={t('profile.support')}
-            value="Contact your administrator"
+            value="Contact Tawheed"
           />
         </motion.div>
 

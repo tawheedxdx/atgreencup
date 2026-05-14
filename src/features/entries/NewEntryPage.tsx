@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { entrySchema, type EntryFormData } from './entrySchema';
 import { useAuthStore } from '../../store/authStore';
-import { createProductionEntry, validateImageFile, getProducts, getMachines, getUnits, getShifts } from '../../services/entries.service';
+import { createProductionEntry, validateImageFile, getProducts, getMachines, getUnits, getShifts, checkDuplicateMachineEntry } from '../../services/entries.service';
 import { todayISO } from '../../utils/helpers';
 import { MobileHeader } from '../../components/layout/MobileHeader';
 import { Input } from '../../components/ui/Input';
@@ -24,6 +24,7 @@ export const NewEntryPage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [duplicateError, setDuplicateError] = useState(false);
 
   // Reference data
   const [products, setProducts] = useState<Product[]>([]);
@@ -97,6 +98,14 @@ export const NewEntryPage: React.FC = () => {
     setImageError('');
 
     try {
+      // ── Duplicate Check ──
+      const isDuplicate = await checkDuplicateMachineEntry(profile!.uid, data.productionDate, data.machineNo);
+      if (isDuplicate) {
+        setDuplicateError(true);
+        setSubmitting(false);
+        return;
+      }
+
       // ── Step 3 + 4 + 5: Upload → get URL → save (all-or-nothing) ──
       // createProductionEntry does NOT touch Firestore until image upload succeeds.
       await createProductionEntry(
@@ -258,6 +267,28 @@ export const NewEntryPage: React.FC = () => {
           </div>
         </form>
       </div>
+
+      {/* Duplicate Error Splash */}
+      {duplicateError && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-dark-surface rounded-[2rem] p-8 max-w-sm w-full shadow-2xl transform transition-all scale-100">
+            <div className="flex justify-center mb-5">
+              <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-xl font-black text-center text-gray-900 dark:text-white mb-3">Entry Already Exists</h3>
+            <p className="text-center text-base font-medium text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+              You cannot make the same entry two times in a day for the same machine.
+            </p>
+            <Button fullWidth size="lg" onClick={() => setDuplicateError(false)} className="!bg-red-500 hover:!bg-red-600 text-white !rounded-2xl shadow-xl shadow-red-500/20">
+              OK
+            </Button>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <Toast

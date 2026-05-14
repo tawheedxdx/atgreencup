@@ -92,6 +92,17 @@ const getTodayLoc = () => {
 };
 
 // ─── Create ──────────────────────────────────────────────────
+export const checkDuplicateMachineEntry = async (uid: string, productionDate: string, machineNo: string): Promise<boolean> => {
+  const q = query(
+    entriesCol,
+    where('operatorUid', '==', uid),
+    where('productionDate', '==', productionDate),
+    where('machineNo', '==', machineNo)
+  );
+  const snap = await getDocs(q);
+  return !snap.empty;
+};
+
 export const createEntry = async (
   data: Omit<ProductionEntry, 'id' | 'status' | 'submittedAt' | 'updatedAt' | 'approvedAt' | 'approvedBy' | 'rejectionReason' | 'correctionMessage'>
 ): Promise<string> => {
