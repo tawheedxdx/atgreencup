@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { entrySchema, type EntryFormData } from './entrySchema';
 import { useAuthStore } from '../../store/authStore';
-import { useAttendanceStore } from '../../store/attendanceStore';
 import { createProductionEntry, validateImageFile, getProducts, getMachines, getUnits, getShifts, checkDuplicateMachineEntry } from '../../services/entries.service';
 import { todayISO } from '../../utils/helpers';
 import { MobileHeader } from '../../components/layout/MobileHeader';
@@ -20,7 +19,6 @@ export const NewEntryPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { profile } = useAuthStore();
-  const { todayRecord } = useAttendanceStore();
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -140,28 +138,6 @@ export const NewEntryPage: React.FC = () => {
     }
   }, [submitting, imageFile, profile, navigate, t]);
 
-
-  if (todayRecord?.status === 'absent') {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-colors duration-300">
-        <MobileHeader title={t('entry.new_title')} onBack={() => navigate(-1)} />
-        <div className="px-5 py-20 max-w-lg mx-auto flex flex-col items-center justify-center text-center">
-          <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Attendance Marked Absent</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
-            You cannot make production entries because you are marked as absent for today.
-          </p>
-          <Button onClick={() => navigate('/dashboard', { replace: true })} variant="secondary">
-            Go to Dashboard
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-colors duration-300">

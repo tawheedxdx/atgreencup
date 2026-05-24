@@ -1,9 +1,6 @@
 // ─── Firebase / Firestore Types ──────────────────────────────
 import type { Timestamp } from 'firebase/firestore';
 
-// ─── Attendance Types ─────────────────────────────────────────
-export type { AttendanceRecord, AttendanceSettings, GPSLocation, AttendanceState, AttendanceStatus } from './attendance';
-
 // ─── Status ──────────────────────────────────────────────────
 export type EntryStatus = 'pending' | 'approved' | 'rejected' | 'correction_requested';
 
