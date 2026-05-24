@@ -21,6 +21,7 @@ import { EarningsPage } from '../features/earnings/EarningsPage';
 import { IssuesPage } from '../features/issues/IssuesPage';
 import { ReportIssuePage } from '../features/issues/ReportIssuePage';
 import { IssueDetailsPage } from '../features/issues/IssueDetailsPage';
+import { AttendanceHistoryPage } from '../features/attendance/AttendanceHistoryPage';
 
 export const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
@@ -53,6 +54,7 @@ export const AnimatedRoutes: React.FC = () => {
           <Route path="/issues/new" element={<ReportIssuePage />} />
           <Route path="/issues/:id" element={<IssueDetailsPage />} />
           <Route path="/issues/:id/edit" element={<ReportIssuePage />} />
+          <Route path="/attendance" element={<AttendanceHistoryPage />} />
         </Route>
 
         {/* Fallback */}

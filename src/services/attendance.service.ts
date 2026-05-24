@@ -1,5 +1,6 @@
 import {
   doc, getDoc, setDoc, serverTimestamp,
+  collection, query, where, getDocs
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { AttendanceRecord, AttendanceSettings, GPSLocation, AttendanceStatus } from '../types/attendance';
@@ -26,6 +27,18 @@ export const getTodayAttendance = async (uid: string): Promise<AttendanceRecord 
   const snap = await getDoc(doc(db, attendanceCol, id));
   if (!snap.exists()) return null;
   return { id: snap.id, ...snap.data() } as AttendanceRecord;
+};
+
+// ─── Get Attendance History ───────────────────────────────────
+export const getAttendanceHistory = async (uid: string): Promise<AttendanceRecord[]> => {
+  const q = query(
+    collection(db, attendanceCol),
+    where('operatorUid', '==', uid)
+  );
+  const snap = await getDocs(q);
+  const records = snap.docs.map(d => ({ id: d.id, ...d.data() } as AttendanceRecord));
+  // Sort descending by date client-side to avoid composite index requirement
+  return records.sort((a, b) => b.date.localeCompare(a.date));
 };
 
 // ─── Get Attendance Settings ──────────────────────────────────

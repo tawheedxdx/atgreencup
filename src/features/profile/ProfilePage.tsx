@@ -302,6 +302,29 @@ export const ProfilePage: React.FC = () => {
           )}
         </motion.div>
 
+        {/* Action Links */}
+        <motion.div variants={itemVariants} className="bg-white/80 dark:bg-dark-surface/60 backdrop-blur-lg rounded-[2rem] p-6 shadow-sm shadow-gray-200/50 border border-white dark:border-dark-border space-y-3 mb-6">
+          <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">Activities</h3>
+          
+          <button 
+            onClick={() => navigate('/attendance')}
+            className="w-full flex items-center gap-4 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 transition-colors hover:bg-emerald-100/50 dark:hover:bg-emerald-900/50 text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-dark-surface shadow-sm border border-emerald-100 dark:border-dark-border flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black text-gray-900 dark:text-emerald-50">My Attendance</p>
+              <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">View history</p>
+            </div>
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </motion.div>
+
         {/* Global Settings */}
         <motion.div variants={itemVariants} className="bg-white/80 dark:bg-dark-surface/60 backdrop-blur-lg rounded-[2rem] p-6 shadow-sm shadow-gray-200/50 border border-white dark:border-dark-border mb-6">
           <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">{t('profile.settings')}</h3>
