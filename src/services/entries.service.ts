@@ -197,6 +197,14 @@ export const getMachines = async (): Promise<Machine[]> => {
     .filter(m => m.active !== false);
 };
 
+export const getMachineByNo = async (machineNo: string): Promise<Machine | null> => {
+  const q = query(collection(db, 'machines'), where('machineNo', '==', machineNo));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return { id: d.id, ...d.data() } as Machine;
+};
+
 export const getUnits = async (): Promise<Unit[]> => {
   const snap = await getDocs(collection(db, 'units'));
   return snap.docs

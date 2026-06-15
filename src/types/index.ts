@@ -104,11 +104,16 @@ export interface ProductionEntry {
   operatorUid: string;
   operatorName: string;
   employeeId: string;
+  machineId: string;
   machineNo: string;
   productId: string;
   productName: string;
-  quantity: number;
-  unit: string;
+  boxQuantity: number;
+  totalPackets: number;
+  counting: number;
+  pcs: number;
+  quantity?: number;
+  unit?: string;
   quantity2?: number;
   unit2?: string;
   shift: string;
@@ -139,6 +144,8 @@ export interface Machine {
   machineNo: string;
   label: string;
   active: boolean;
+  assignedProductId?: string;
+  assignedProductName?: string;
 }
 
 export interface Unit {

@@ -106,9 +106,20 @@ export const EntryDetailsPage: React.FC = () => {
           <h3 className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.2em] mb-2">{t('profile.details')}</h3>
           <DetailRow label={t('profile.operator')} value={entry.operatorName} />
           {entry.employeeId && <DetailRow label={t('profile.emp_id')} value={entry.employeeId} />}
-          <DetailRow label={t('entry.quantity_box')} value={`${entry.quantity} ${t(`common.${entry.unit.toLowerCase()}`) || entry.unit}`} />
-          {entry.quantity2 && entry.unit2 && (
-            <DetailRow label={t('entry.quantity_pcs')} value={`${entry.quantity2} ${t(`common.${entry.unit2.toLowerCase()}`) || entry.unit2}`} />
+          {entry.boxQuantity !== undefined && entry.totalPackets !== undefined && entry.counting !== undefined && entry.pcs !== undefined ? (
+            <>
+              <DetailRow label={t('entry.quantity_box') || 'BOX'} value={`${entry.boxQuantity} ${t('common.box') || 'BOX'}`} />
+              <DetailRow label="Total Packets" value={`${entry.totalPackets} PACKETS`} />
+              <DetailRow label="Counting" value={`${entry.counting} PCS/PKT`} />
+              <DetailRow label="PCS" value={`${entry.pcs} ${t('common.pcs') || 'PCS'}`} />
+            </>
+          ) : (
+            <>
+              <DetailRow label={t('entry.quantity_box') || 'BOX'} value={`${entry.quantity} ${t(`common.${entry.unit?.toLowerCase()}`) || entry.unit}`} />
+              {entry.quantity2 !== undefined && entry.unit2 && (
+                <DetailRow label={t('entry.quantity_pcs') || 'PCS'} value={`${entry.quantity2} ${t(`common.${entry.unit2.toLowerCase()}`) || entry.unit2}`} />
+              )}
+            </>
           )}
           <DetailRow label={t('entry.shift')} value={t(`shift.${entry.shift.toLowerCase()}`) || entry.shift} />
           <DetailRow label={t('entry.date')} value={entry.productionDate} />

@@ -35,8 +35,17 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry }) => {
       <div className="flex items-center justify-between mt-1">
         <div className="flex items-center gap-4 text-[11px] text-gray-500 dark:text-gray-400 relative z-10 font-bold uppercase tracking-widest">
           <span className="text-emerald-700 dark:text-emerald-400">
-            {entry.quantity} {t(`common.${entry.unit.toLowerCase()}`) || entry.unit}
-            {entry.quantity2 && entry.unit2 && ` + ${entry.quantity2} ${t(`common.${entry.unit2.toLowerCase()}`) || entry.unit2}`}
+            {entry.boxQuantity !== undefined ? (
+              <>
+                {entry.boxQuantity} {t('common.box') || 'BOX'}
+                {entry.pcs !== undefined && ` + ${entry.pcs} ${t('common.pcs') || 'PCS'}`}
+              </>
+            ) : (
+              <>
+                {entry.quantity} {entry.unit ? t(`common.${entry.unit.toLowerCase()}`) || entry.unit : ''}
+                {entry.quantity2 && entry.unit2 && ` + ${entry.quantity2} ${t(`common.${entry.unit2.toLowerCase()}`) || entry.unit2}`}
+              </>
+            )}
           </span>
           <span className="opacity-40">{localizedShift}</span>
         </div>

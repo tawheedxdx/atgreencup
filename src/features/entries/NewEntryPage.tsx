@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { entrySchema, type EntryFormData } from './entrySchema';
 import { useAuthStore } from '../../store/authStore';
-import { createProductionEntry, validateImageFile, getProducts, getMachines, getUnits, getShifts, checkDuplicateMachineEntry } from '../../services/entries.service';
+import { createProductionEntry, validateImageFile, getProducts, getMachines, getUnits, getShifts, checkDuplicateMachineEntry, getMachineByNo } from '../../services/entries.service';
 import { todayISO } from '../../utils/helpers';
 import { MobileHeader } from '../../components/layout/MobileHeader';
 import { Input } from '../../components/ui/Input';
@@ -53,26 +53,76 @@ export const NewEntryPage: React.FC = () => {
     resolver: zodResolver(entrySchema),
     defaultValues: {
       machineNo: '',
+      machineId: '',
       productId: '',
       productName: '',
-      quantity: undefined,
-      unit: 'BOX',
-      quantity2: undefined,
-      unit2: 'PCS',
+      boxQuantity: undefined,
+      totalPackets: undefined,
+      counting: undefined,
+      pcs: undefined,
       shift: '',
       productionDate: todayISO(),
       notes: '',
     },
   });
 
-  // Auto-set product name when product is selected
-  const watchProductId = watch('productId');
+  const watchMachineNo = watch('machineNo');
+  const watchProductName = watch('productName');
+  const watchTotalPackets = watch('totalPackets');
+  const watchCounting = watch('counting');
+  const watchPcs = watch('pcs');
+  const [machineError, setMachineError] = useState<string | null>(null);
+  const [loadingMachine, setLoadingMachine] = useState(false);
+
   useEffect(() => {
-    const product = products.find(p => p.id === watchProductId);
-    if (product) {
-      setValue('productName', product.name);
+    const tp = Number(watchTotalPackets);
+    const c = Number(watchCounting);
+    if (!isNaN(tp) && !isNaN(c) && Number.isInteger(tp) && Number.isInteger(c) && tp > 0 && c > 0) {
+      setValue('pcs', tp * c, { shouldValidate: true });
+    } else {
+      setValue('pcs', undefined as any, { shouldValidate: true });
     }
-  }, [watchProductId, products, setValue]);
+  }, [watchTotalPackets, watchCounting, setValue]);
+
+  useEffect(() => {
+    if (!watchMachineNo) {
+      setValue('productId', '');
+      setValue('productName', '');
+      setValue('machineId', '');
+      setMachineError(null);
+      return;
+    }
+
+    const fetchMachineInfo = async () => {
+      setLoadingMachine(true);
+      setMachineError(null);
+      try {
+        const machine = await getMachineByNo(watchMachineNo);
+        if (machine) {
+          setValue('machineId', machine.id);
+          if (machine.assignedProductId && machine.assignedProductName) {
+            setValue('productId', machine.assignedProductId);
+            setValue('productName', machine.assignedProductName);
+          } else {
+            setValue('productId', '');
+            setValue('productName', '');
+            setMachineError('No product assigned to this machine. Please contact admin.');
+          }
+        } else {
+          setValue('productId', '');
+          setValue('productName', '');
+          setMachineError('Selected machine could not be found.');
+        }
+      } catch (err) {
+        console.error('Error fetching machine details:', err);
+        setMachineError('Error loading machine assignment.');
+      } finally {
+        setLoadingMachine(false);
+      }
+    };
+
+    fetchMachineInfo();
+  }, [watchMachineNo, setValue]);
 
   const onSubmit = useCallback(async (data: EntryFormData) => {
     // Prevent double-submit
@@ -114,6 +164,10 @@ export const NewEntryPage: React.FC = () => {
           operatorUid: profile!.uid,
           operatorName: profile!.name,
           employeeId: profile!.employeeId || '',
+          quantity: data.boxQuantity,
+          unit: 'BOX',
+          quantity2: data.pcs,
+          unit2: 'PCS',
         },
         imageFile,
         setUploadProgress
@@ -172,53 +226,138 @@ export const NewEntryPage: React.FC = () => {
           />
 
           {/* Product */}
-          <Select
-            label={t('entry.product')}
-            placeholder={t('entry.product')}
-            options={products.map(p => ({ value: p.id, label: p.name }))}
-            {...register('productId')}
-            error={errors.productId?.message}
-          />
+          <div className="relative pb-3">
+            <Input
+              label={t('entry.product')}
+              value={watchProductName || ''}
+              readOnly
+              disabled
+              placeholder={loadingMachine ? 'Loading assigned product...' : 'Product will be auto-filled'}
+              error={errors.productId?.message || errors.productName?.message || machineError || undefined}
+              rightIcon={
+                watchProductName ? (
+                  <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 dark:text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-full uppercase tracking-wider select-none">
+                    🔒 Auto-filled
+                  </span>
+                ) : undefined
+              }
+              className="!bg-gray-100/70 dark:!bg-dark-surface/30 cursor-not-allowed select-none"
+            />
+            {watchProductName && !machineError && (
+              <span className="block mt-1 px-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 tracking-tight">
+                Auto-filled from selected machine
+              </span>
+            )}
+          </div>
 
-          {/* Main Quantity Row */}
+          <input type="hidden" {...register('machineId')} />
+          <input type="hidden" {...register('productId')} />
+          <input type="hidden" {...register('productName')} />
+
+          {/* BOX */}
           <div>
             <Controller
-              name="quantity"
+              name="boxQuantity"
               control={control}
               render={({ field }) => (
                 <Input
-                  label={t('entry.quantity_box')}
+                  label="BOX"
                   type="number"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   placeholder="0"
                   value={field.value ?? ''}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                  error={errors.quantity?.message}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === '' ? undefined : Number(val));
+                  }}
+                  error={errors.boxQuantity?.message}
                   rightIcon={<span className="text-xs font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">{t('common.box')}</span>}
                 />
               )}
             />
           </div>
 
-          {/* Secondary Quantity Row */}
+          {/* Total Packets */}
           <div>
             <Controller
-              name="quantity2"
+              name="totalPackets"
               control={control}
               render={({ field }) => (
                 <Input
-                  label={t('entry.quantity_pcs')}
+                  label="Total Packets"
                   type="number"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   placeholder="0"
                   value={field.value ?? ''}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                  error={errors.quantity2?.message}
-                  rightIcon={<span className="text-xs font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">{t('common.pcs')}</span>}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === '' ? undefined : Number(val));
+                  }}
+                  error={errors.totalPackets?.message}
+                  rightIcon={<span className="text-xs font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">PACKETS</span>}
                 />
               )}
             />
           </div>
+
+          {/* Counting */}
+          <div>
+            <Controller
+              name="counting"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  label="Counting"
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === '' ? undefined : Number(val));
+                  }}
+                  error={errors.counting?.message}
+                  rightIcon={<span className="text-xs font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">PCS/PKT</span>}
+                />
+              )}
+            />
+          </div>
+
+          {/* PCS (Auto Calculated / Read Only) */}
+          <div>
+            <Controller
+              name="pcs"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  label="PCS"
+                  type="number"
+                  readOnly
+                  disabled
+                  placeholder="Auto Calculated"
+                  value={field.value ?? ''}
+                  error={errors.pcs?.message}
+                  rightIcon={<span className="text-xs font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">{t('common.pcs')}</span>}
+                  className="!bg-gray-100/70 dark:!bg-dark-surface/30 cursor-not-allowed select-none"
+                />
+              )}
+            />
+          </div>
+
+          {/* Calculation Preview Card */}
+          {watchTotalPackets !== undefined && watchCounting !== undefined && !errors.totalPackets && !errors.counting && (
+            <div className="bg-emerald-50/50 dark:bg-emerald-950/10 rounded-2xl p-4 border border-emerald-100/60 dark:border-emerald-900/30 flex items-center justify-between shadow-sm">
+              <div>
+                <p className="text-[9px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-[0.15em] mb-1">Calculation Preview</p>
+                <p className="text-lg font-black text-gray-900 dark:text-emerald-50">
+                  {watchTotalPackets} <span className="text-emerald-500 font-normal">×</span> {watchCounting} = {watchPcs ?? '—'} <span className="text-xs font-bold text-gray-400 dark:text-gray-500">PCS</span>
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-emerald-100/60 dark:bg-emerald-950/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                🧮
+              </div>
+            </div>
+          )}
 
           {/* Shift */}
           <Select
@@ -261,7 +400,14 @@ export const NewEntryPage: React.FC = () => {
 
           {/* Submit */}
           <div className="pt-4 pb-10">
-            <Button type="submit" fullWidth size="lg" loading={submitting} className="!rounded-2xl shadow-xl shadow-emerald-500/10">
+            <Button
+              type="submit"
+              fullWidth
+              size="lg"
+              loading={submitting}
+              disabled={!!machineError || loadingMachine || !watchMachineNo}
+              className="!rounded-2xl shadow-xl shadow-emerald-500/10"
+            >
               {submitting ? t('entry.submitting') : t('common.submit')}
             </Button>
           </div>
