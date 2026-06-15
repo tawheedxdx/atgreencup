@@ -5,6 +5,9 @@ export const entrySchema = z.object({
   machineId: z.string().min(1, 'Machine ID is required'),
   productId: z.string().min(1, 'Product is required'),
   productName: z.string().min(1, 'Product name is required'),
+  packetsPerBox: z.number({ invalid_type_error: 'Packets Per Box is required' })
+    .int()
+    .positive(),
   boxQuantity: z.number({ invalid_type_error: 'BOX is required' })
     .int({ message: 'Please enter whole numbers only.' })
     .positive({ message: 'BOX must be greater than 0' }),

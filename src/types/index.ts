@@ -108,6 +108,7 @@ export interface ProductionEntry {
   machineNo: string;
   productId: string;
   productName: string;
+  packetsPerBox: number;
   boxQuantity: number;
   totalPackets: number;
   counting: number;
@@ -137,6 +138,7 @@ export interface Product {
   sku: string;
   defaultUnit: string;
   active: boolean;
+  packetsPerBox?: number;
 }
 
 export interface Machine {

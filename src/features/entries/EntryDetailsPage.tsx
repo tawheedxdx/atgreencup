@@ -109,6 +109,9 @@ export const EntryDetailsPage: React.FC = () => {
           {entry.boxQuantity !== undefined && entry.totalPackets !== undefined && entry.counting !== undefined && entry.pcs !== undefined ? (
             <>
               <DetailRow label={t('entry.quantity_box') || 'BOX'} value={`${entry.boxQuantity} ${t('common.box') || 'BOX'}`} />
+              {entry.packetsPerBox !== undefined && (
+                <DetailRow label="Packets Per Box" value={`${entry.packetsPerBox} PKTS/BOX`} />
+              )}
               <DetailRow label="Total Packets" value={`${entry.totalPackets} PACKETS`} />
               <DetailRow label="Counting" value={`${entry.counting} PCS/PKT`} />
               <DetailRow label="PCS" value={`${entry.pcs} ${t('common.pcs') || 'PCS'}`} />

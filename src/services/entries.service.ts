@@ -190,6 +190,12 @@ export const getProducts = async (): Promise<Product[]> => {
     .filter(p => p.active !== false);
 };
 
+export const getProductById = async (id: string): Promise<Product | null> => {
+  const snap = await getDoc(doc(db, 'products', id));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Product;
+};
+
 export const getMachines = async (): Promise<Machine[]> => {
   const snap = await getDocs(collection(db, 'machines'));
   return snap.docs

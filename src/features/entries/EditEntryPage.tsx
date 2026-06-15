@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { entrySchema, type EntryFormData } from './entrySchema';
 import { useAuthStore } from '../../store/authStore';
-import { getEntryById, updateEntry, validateImageFile, getProducts, getMachines, getUnits, getShifts, getMachineByNo } from '../../services/entries.service';
+import { getEntryById, updateEntry, validateImageFile, getProducts, getMachines, getUnits, getShifts, getMachineByNo, getProductById } from '../../services/entries.service';
 import { uploadEntryImage, deleteEntryImage } from '../../services/storage.service';
 import { compressImage } from '../../utils/helpers';
 import { MobileHeader } from '../../components/layout/MobileHeader';
@@ -44,6 +44,7 @@ export const EditEntryPage: React.FC = () => {
       machineId: '',
       productId: '',
       productName: '',
+      packetsPerBox: undefined,
       boxQuantity: undefined,
       totalPackets: undefined,
       counting: undefined,
@@ -56,11 +57,23 @@ export const EditEntryPage: React.FC = () => {
 
   const watchMachineNo = watch('machineNo');
   const watchProductName = watch('productName');
+  const watchPacketsPerBox = watch('packetsPerBox');
+  const watchBoxQuantity = watch('boxQuantity');
   const watchTotalPackets = watch('totalPackets');
   const watchCounting = watch('counting');
   const watchPcs = watch('pcs');
   const [machineError, setMachineError] = useState<string | null>(null);
   const [loadingMachine, setLoadingMachine] = useState(false);
+
+  useEffect(() => {
+    const box = Number(watchBoxQuantity);
+    const ppb = Number(watchPacketsPerBox);
+    if (!isNaN(box) && !isNaN(ppb) && Number.isInteger(box) && Number.isInteger(ppb) && box > 0 && ppb > 0) {
+      setValue('totalPackets', box * ppb, { shouldValidate: true });
+    } else {
+      setValue('totalPackets', undefined as any, { shouldValidate: true });
+    }
+  }, [watchBoxQuantity, watchPacketsPerBox, setValue]);
 
   useEffect(() => {
     const tp = Number(watchTotalPackets);
@@ -95,12 +108,27 @@ export const EditEntryPage: React.FC = () => {
         setShifts(s);
         setExistingImageUrl(entryData.imageUrl);
         
+        let ppb: number | undefined = entryData.packetsPerBox;
+        if (ppb === undefined || ppb === null) {
+          const selectedProduct = p.find(item => item.id === entryData.productId);
+          ppb = selectedProduct?.packetsPerBox;
+          if (ppb === undefined) {
+            try {
+              const fetchedProd = await getProductById(entryData.productId);
+              ppb = fetchedProd?.packetsPerBox;
+            } catch (e) {
+              console.error('Failed to fetch product packetsPerBox:', e);
+            }
+          }
+        }
+
         const selectedMachine = m.find(item => item.machineNo === entryData.machineNo);
         reset({
           machineNo: entryData.machineNo,
           machineId: entryData.machineId || selectedMachine?.id || '',
           productId: entryData.productId,
           productName: entryData.productName,
+          packetsPerBox: ppb,
           boxQuantity: entryData.boxQuantity ?? entryData.quantity,
           totalPackets: entryData.totalPackets,
           counting: entryData.counting,
@@ -122,6 +150,7 @@ export const EditEntryPage: React.FC = () => {
     if (!watchMachineNo) {
       setValue('productId', '');
       setValue('productName', '');
+      setValue('packetsPerBox', undefined as any);
       setValue('machineId', '');
       setMachineError(null);
       return;
@@ -137,14 +166,28 @@ export const EditEntryPage: React.FC = () => {
           if (machine.assignedProductId && machine.assignedProductName) {
             setValue('productId', machine.assignedProductId);
             setValue('productName', machine.assignedProductName);
+
+            const foundProd = products.find(p => p.id === machine.assignedProductId);
+            let ppb = foundProd?.packetsPerBox;
+            if (ppb === undefined) {
+              const fetchedProd = await getProductById(machine.assignedProductId);
+              ppb = fetchedProd?.packetsPerBox;
+            }
+            if (ppb !== undefined && ppb > 0) {
+              setValue('packetsPerBox', ppb, { shouldValidate: true });
+            } else {
+              setMachineError('Assigned product has no valid Packets Per Box. Please contact admin.');
+            }
           } else {
             setValue('productId', '');
             setValue('productName', '');
+            setValue('packetsPerBox', undefined as any);
             setMachineError('No product assigned to this machine. Please contact admin.');
           }
         } else {
           setValue('productId', '');
           setValue('productName', '');
+          setValue('packetsPerBox', undefined as any);
           setMachineError('Selected machine could not be found.');
         }
       } catch (err) {
@@ -156,7 +199,7 @@ export const EditEntryPage: React.FC = () => {
     };
 
     fetchMachineInfo();
-  }, [watchMachineNo, setValue]);
+  }, [watchMachineNo, setValue, products]);
 
   const onSubmit = useCallback(async (data: EntryFormData) => {
     if (submitting || !entry?.id) return;
@@ -277,6 +320,33 @@ export const EditEntryPage: React.FC = () => {
             )}
           </div>
 
+          {/* Packets Per Box */}
+          <div className="relative pb-3">
+            <Controller
+              name="packetsPerBox"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  label="Packets Per Box"
+                  type="number"
+                  readOnly
+                  disabled
+                  placeholder={loadingMachine ? 'Loading...' : 'Packets Per Box will be auto-filled'}
+                  value={field.value ?? ''}
+                  error={errors.packetsPerBox?.message}
+                  rightIcon={
+                    field.value ? (
+                      <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 dark:text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-full uppercase tracking-wider select-none">
+                        🔒 Auto-filled
+                      </span>
+                    ) : undefined
+                  }
+                  className="!bg-gray-100/70 dark:!bg-dark-surface/30 cursor-not-allowed select-none"
+                />
+              )}
+            />
+          </div>
+
           <input type="hidden" {...register('machineId')} />
           <input type="hidden" {...register('productId')} />
           <input type="hidden" {...register('productName')} />
@@ -304,7 +374,7 @@ export const EditEntryPage: React.FC = () => {
             />
           </div>
 
-          {/* Total Packets */}
+          {/* Total Packets (Auto Calculated / Read Only) */}
           <div>
             <Controller
               name="totalPackets"
@@ -313,15 +383,13 @@ export const EditEntryPage: React.FC = () => {
                 <Input
                   label="Total Packets"
                   type="number"
-                  inputMode="numeric"
-                  placeholder="0"
+                  readOnly
+                  disabled
+                  placeholder="Auto Calculated"
                   value={field.value ?? ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    field.onChange(val === '' ? undefined : Number(val));
-                  }}
                   error={errors.totalPackets?.message}
                   rightIcon={<span className="text-xs font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest">PACKETS</span>}
+                  className="!bg-gray-100/70 dark:!bg-dark-surface/30 cursor-not-allowed select-none"
                 />
               )}
             />
@@ -372,16 +440,20 @@ export const EditEntryPage: React.FC = () => {
           </div>
 
           {/* Calculation Preview Card */}
-          {watchTotalPackets !== undefined && watchCounting !== undefined && !errors.totalPackets && !errors.counting && (
-            <div className="bg-emerald-50/50 dark:bg-emerald-950/10 rounded-2xl p-4 border border-emerald-100/60 dark:border-emerald-900/30 flex items-center justify-between shadow-sm">
+          {watchBoxQuantity !== undefined && watchPacketsPerBox !== undefined && watchCounting !== undefined &&
+           !errors.boxQuantity && !errors.counting && watchTotalPackets !== undefined && watchPcs !== undefined && (
+            <div className="bg-emerald-50/50 dark:bg-emerald-950/10 rounded-2xl p-5 border border-emerald-100/60 dark:border-emerald-900/30 space-y-3 shadow-sm">
               <div>
-                <p className="text-[9px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-[0.15em] mb-1">Calculation Preview</p>
-                <p className="text-lg font-black text-gray-900 dark:text-emerald-50">
-                  {watchTotalPackets} <span className="text-emerald-500 font-normal">×</span> {watchCounting} = {watchPcs ?? '—'} <span className="text-xs font-bold text-gray-400 dark:text-gray-500">PCS</span>
-                </p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-emerald-100/60 dark:bg-emerald-950/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                🧮
+                <p className="text-[9px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-[0.15em] mb-2">Calculation Preview</p>
+                <div className="space-y-2 font-black text-gray-900 dark:text-emerald-50">
+                  <p className="text-base">
+                    {watchBoxQuantity} <span className="text-emerald-500 font-normal">×</span> {watchPacketsPerBox} = {watchTotalPackets} <span className="text-xs font-bold text-gray-400 dark:text-gray-500">Packets</span>
+                  </p>
+                  <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Then:</p>
+                  <p className="text-lg">
+                    {watchTotalPackets} <span className="text-emerald-500 font-normal">×</span> {watchCounting} = {watchPcs} <span className="text-xs font-bold text-gray-400 dark:text-gray-500">PCS</span>
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -424,7 +496,7 @@ export const EditEntryPage: React.FC = () => {
               fullWidth
               size="lg"
               loading={submitting}
-              disabled={!!machineError || loadingMachine || !watchMachineNo}
+              disabled={!!machineError || loadingMachine || !watchMachineNo || !watchProductName || !watchPacketsPerBox || !watchBoxQuantity || !watchCounting || !watchPcs || submitting}
               className="!rounded-2xl shadow-xl shadow-emerald-500/10"
             >
               {submitting ? t('common.save') : t('common.save_changes') || "Save Changes"}
