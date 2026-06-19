@@ -176,13 +176,15 @@ export const NewEntryPage: React.FC = () => {
     setImageError('');
 
     try {
-      // ── Duplicate Check ──
+      // ── Duplicate Check (Disabled as requested) ──
+      /*
       const isDuplicate = await checkDuplicateMachineEntry(profile!.uid, data.productionDate, data.machineNo);
       if (isDuplicate) {
         setDuplicateError(true);
         setSubmitting(false);
         return;
       }
+      */
 
       // ── Step 3 + 4 + 5: Upload → get URL → save (all-or-nothing) ──
       // createProductionEntry does NOT touch Firestore until image upload succeeds.
