@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AnimatePresence } from 'framer-motion';
 import { AppShell } from '../components/layout/AppShell';
 import { ProtectedRoute } from '../routes/ProtectedRoute';
+import { RoleRedirect } from '../routes/RoleRedirect';
 
 // Auth screens
 import { SplashScreen } from '../features/auth/SplashScreen';
@@ -56,18 +57,18 @@ export const AnimatedRoutes: React.FC = () => {
         <Route element={
           <ProtectedRoute allowedRoles={['operator', 'employee']}><AppShell /></ProtectedRoute>
         }>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/trends" element={<TrendsPage />} />
-          <Route path="/entries" element={<PastEntriesPage />} />
-          <Route path="/entries/new" element={<NewEntryPage />} />
-          <Route path="/entries/:id" element={<EntryDetailsPage />} />
-          <Route path="/entries/:id/edit" element={<EditEntryPage />} />
-          <Route path="/earnings" element={<EarningsPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/issues" element={<IssuesPage />} />
-          <Route path="/issues/new" element={<ReportIssuePage />} />
-          <Route path="/issues/:id" element={<IssueDetailsPage />} />
-          <Route path="/issues/:id/edit" element={<ReportIssuePage />} />
+          <Route path="/operator/dashboard" element={<DashboardPage />} />
+          <Route path="/operator/trends" element={<TrendsPage />} />
+          <Route path="/operator/entries" element={<PastEntriesPage />} />
+          <Route path="/operator/entries/new" element={<NewEntryPage />} />
+          <Route path="/operator/entries/:id" element={<EntryDetailsPage />} />
+          <Route path="/operator/entries/:id/edit" element={<EditEntryPage />} />
+          <Route path="/operator/earnings" element={<EarningsPage />} />
+          <Route path="/operator/profile" element={<ProfilePage />} />
+          <Route path="/operator/issues" element={<IssuesPage />} />
+          <Route path="/operator/issues/new" element={<ReportIssuePage />} />
+          <Route path="/operator/issues/:id" element={<IssueDetailsPage />} />
+          <Route path="/operator/issues/:id/edit" element={<ReportIssuePage />} />
         </Route>
 
         {/* Protected admin routes with admin shell (bottom nav) */}
@@ -88,8 +89,15 @@ export const AnimatedRoutes: React.FC = () => {
           <Route path="/admin/search" element={<AdminSearchPage />} />
         </Route>
 
-        {/* Operator route redirects for role validation */}
-        <Route path="/operator/dashboard" element={<Navigate to="/dashboard" replace />} />
+        {/* Top-level route redirects mapped to RoleRedirect */}
+        <Route path="/dashboard" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+        <Route path="/trends" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+        <Route path="/entries" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+        <Route path="/entries/*" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+        <Route path="/earnings" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+        <Route path="/issues" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
+        <Route path="/issues/*" element={<ProtectedRoute><RoleRedirect /></ProtectedRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

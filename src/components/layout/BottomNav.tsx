@@ -9,7 +9,7 @@ export const BottomNav: React.FC = () => {
 
   const navItems = [
     {
-      to: '/dashboard',
+      to: '/operator/dashboard',
       label: t('nav.dashboard'),
       icon: (
         <svg className="w-5 h-5 sm:w-6 sm:h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,7 +18,7 @@ export const BottomNav: React.FC = () => {
       ),
     },
     {
-      to: '/trends',
+      to: '/operator/trends',
       label: t('nav.trends'),
       icon: (
         <svg className="w-5 h-5 sm:w-6 sm:h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +27,7 @@ export const BottomNav: React.FC = () => {
       ),
     },
     {
-      to: '/entries/new',
+      to: '/operator/entries/new',
       label: t('nav.new_entry'),
       icon: (
         <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@ export const BottomNav: React.FC = () => {
       primary: true,
     },
     {
-      to: '/entries',
+      to: '/operator/entries',
       label: t('nav.history'),
       icon: (
         <svg className="w-5 h-5 sm:w-6 sm:h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,7 +46,7 @@ export const BottomNav: React.FC = () => {
       ),
     },
     {
-      to: '/issues',
+      to: '/operator/issues',
       label: t('nav.issues'),
       icon: (
         <svg className="w-5 h-5 sm:w-6 sm:h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +55,7 @@ export const BottomNav: React.FC = () => {
       ),
     },
     {
-      to: '/earnings',
+      to: '/operator/earnings',
       label: t('nav.earnings', 'Earnings'),
       icon: (
         <svg className="w-5 h-5 sm:w-6 sm:h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +64,7 @@ export const BottomNav: React.FC = () => {
       ),
     },
     {
-      to: '/profile',
+      to: '/operator/profile',
       label: t('nav.profile'),
       icon: (
         <svg className="w-5 h-5 sm:w-6 sm:h-6 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,10 +79,10 @@ export const BottomNav: React.FC = () => {
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto relative px-2">
         {navItems.map((item) => {
           const active = location.pathname === item.to ||
-            (item.to === '/entries' && location.pathname.startsWith('/entries/') && location.pathname !== '/entries/new') ||
-            (item.to === '/issues' && location.pathname.startsWith('/issues/') && location.pathname !== '/issues/new');
+            (item.to === '/operator/entries' && location.pathname.startsWith('/operator/entries/') && location.pathname !== '/operator/entries/new') ||
+            (item.to === '/operator/issues' && location.pathname.startsWith('/operator/issues/') && location.pathname !== '/operator/issues/new');
 
-          const isIssuesTab = item.to === '/issues';
+          const isIssuesTab = item.to === '/operator/issues';
 
           if (item.primary) {
             return (
