@@ -78,25 +78,51 @@ export const WelcomeScreen: React.FC = () => {
             }
           }}
         >
-          <motion.h1 
-            variants={{
-              hidden: { y: 20, opacity: 0 },
-              visible: { y: 0, opacity: 1 }
-            }}
-            className="text-white text-4xl font-black tracking-tight mb-3"
-          >
-            Welcome, {profile?.name?.split(' ')[0] || 'Operator'}!
-          </motion.h1>
+          {profile?.role === 'admin' ? (
+            <>
+              <motion.h1 
+                variants={{
+                  hidden: { y: 20, opacity: 0 },
+                  visible: { y: 0, opacity: 1 }
+                }}
+                className="text-white text-4xl font-black tracking-tight mb-3 leading-tight"
+              >
+                Welcome Back,<br />Administrator
+              </motion.h1>
 
-          <motion.p 
-            variants={{
-              hidden: { y: 10, opacity: 0 },
-              visible: { y: 0, opacity: 0.9 }
-            }}
-            className="text-emerald-100 text-base font-bold"
-          >
-            Redirecting to your production dashboard...
-          </motion.p>
+              <motion.p 
+                variants={{
+                  hidden: { y: 10, opacity: 0 },
+                  visible: { y: 0, opacity: 0.9 }
+                }}
+                className="text-emerald-100 text-lg font-bold"
+              >
+                At GreenCup Management Portal
+              </motion.p>
+            </>
+          ) : (
+            <>
+              <motion.h1 
+                variants={{
+                  hidden: { y: 20, opacity: 0 },
+                  visible: { y: 0, opacity: 1 }
+                }}
+                className="text-white text-4xl font-black tracking-tight mb-3"
+              >
+                Welcome, {profile?.name?.split(' ')[0] || 'Operator'}!
+              </motion.h1>
+
+              <motion.p 
+                variants={{
+                  hidden: { y: 10, opacity: 0 },
+                  visible: { y: 0, opacity: 0.9 }
+                }}
+                className="text-emerald-100 text-base font-bold"
+              >
+                Redirecting to your production dashboard...
+              </motion.p>
+            </>
+          )}
         </motion.div>
 
         {/* Loading Indicator */}

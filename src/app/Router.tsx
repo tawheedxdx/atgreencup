@@ -22,6 +22,21 @@ import { IssuesPage } from '../features/issues/IssuesPage';
 import { ReportIssuePage } from '../features/issues/ReportIssuePage';
 import { IssueDetailsPage } from '../features/issues/IssueDetailsPage';
 
+// Admin screens & shell
+import { AdminShell } from '../components/layout/AdminShell';
+import { AdminDashboardPage } from '../features/admin/AdminDashboardPage';
+import { AdminProductionPage } from '../features/admin/AdminProductionPage';
+import { AdminAttendancePage } from '../features/admin/AdminAttendancePage';
+import { AdminIssuesPage } from '../features/admin/AdminIssuesPage';
+import { AdminEmployeesPage } from '../features/admin/AdminEmployeesPage';
+import { AdminMorePage } from '../features/admin/AdminMorePage';
+import { AdminProductsPage } from '../features/admin/AdminProductsPage';
+import { AdminMachinesPage } from '../features/admin/AdminMachinesPage';
+import { AdminSalaryPage } from '../features/admin/AdminSalaryPage';
+import { AdminReportsPage } from '../features/admin/AdminReportsPage';
+import { AdminSettingsPage } from '../features/admin/AdminSettingsPage';
+import { AdminSearchPage } from '../features/admin/AdminSearchPage';
+
 export const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
   
@@ -37,9 +52,9 @@ export const AnimatedRoutes: React.FC = () => {
           <ProtectedRoute><WelcomeScreen /></ProtectedRoute>
         } />
 
-        {/* Protected routes with app shell (bottom nav) */}
+        {/* Protected operator routes with app shell (bottom nav) */}
         <Route element={
-          <ProtectedRoute><AppShell /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={['operator', 'employee']}><AppShell /></ProtectedRoute>
         }>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/trends" element={<TrendsPage />} />
@@ -54,6 +69,27 @@ export const AnimatedRoutes: React.FC = () => {
           <Route path="/issues/:id" element={<IssueDetailsPage />} />
           <Route path="/issues/:id/edit" element={<ReportIssuePage />} />
         </Route>
+
+        {/* Protected admin routes with admin shell (bottom nav) */}
+        <Route element={
+          <ProtectedRoute allowedRoles={['admin']}><AdminShell /></ProtectedRoute>
+        }>
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/production" element={<AdminProductionPage />} />
+          <Route path="/admin/attendance" element={<AdminAttendancePage />} />
+          <Route path="/admin/issues" element={<AdminIssuesPage />} />
+          <Route path="/admin/employees" element={<AdminEmployeesPage />} />
+          <Route path="/admin/more" element={<AdminMorePage />} />
+          <Route path="/admin/products" element={<AdminProductsPage />} />
+          <Route path="/admin/machines" element={<AdminMachinesPage />} />
+          <Route path="/admin/salary" element={<AdminSalaryPage />} />
+          <Route path="/admin/reports" element={<AdminReportsPage />} />
+          <Route path="/admin/settings" element={<AdminSettingsPage />} />
+          <Route path="/admin/search" element={<AdminSearchPage />} />
+        </Route>
+
+        {/* Operator route redirects for role validation */}
+        <Route path="/operator/dashboard" element={<Navigate to="/dashboard" replace />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
