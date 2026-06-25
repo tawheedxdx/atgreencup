@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         return;
       }
 
-      if (!profile.active) {
+      if (profile.active === false) {
         await logoutService();
         set({ loading: false, error: 'Account is inactive. Contact your administrator.' });
         return;
@@ -72,7 +72,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       if (user) {
         try {
           const profile = await getUserProfile(user.uid);
-          if (profile && profile.active && ['operator', 'employee', 'admin'].includes(profile.role)) {
+          if (profile && profile.active !== false && ['operator', 'employee', 'admin'].includes(profile.role)) {
             set({ user, profile, loading: false, initialized: true });
           } else {
             await logoutService();

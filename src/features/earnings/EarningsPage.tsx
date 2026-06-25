@@ -53,7 +53,7 @@ export const EarningsPage: React.FC = () => {
 
   return (
     <PageTransition className="min-h-screen bg-gray-50 dark:bg-dark-bg pb-24 transition-colors duration-300">
-      <MobileHeader title="Earnings" onBack={() => navigate('/dashboard')} />
+      <MobileHeader title="Earnings" onBack={() => navigate('/operator/dashboard')} />
 
       <div className="px-5 max-w-lg mx-auto py-6 space-y-6">
 
