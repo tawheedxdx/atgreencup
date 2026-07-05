@@ -205,7 +205,7 @@ export const NewEntryPage: React.FC = () => {
 
       setSubmitting(false);
       setToast({ message: t('common.success'), type: 'success' });
-      setTimeout(() => navigate('/operator/dashboard', { replace: true }), 1500);
+      setTimeout(() => navigate('/dashboard', { replace: true }), 1500);
     } catch (err: any) {
       console.error('Submit error:', err);
       // Distinguish upload errors from other errors for a clearer message

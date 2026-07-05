@@ -121,7 +121,7 @@ export const DashboardPage: React.FC = () => {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => navigate('/operator/profile')}
+              onClick={() => navigate('/profile')}
               className="w-12 h-12 bg-white/10 dark:bg-emerald-500/10 backdrop-blur-md rounded-2xl flex items-center justify-center ring-1 ring-white/20 dark:ring-emerald-500/20 shadow-inner"
             >
               <svg className="w-6 h-6 text-white dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +137,7 @@ export const DashboardPage: React.FC = () => {
             className="flex gap-3"
           >
             <Button
-              onClick={() => navigate('/operator/entries/new')}
+              onClick={() => navigate('/entries/new')}
               className="flex-[2] !bg-white dark:!bg-emerald-500 !text-emerald-800 dark:!text-emerald-950 !font-black !rounded-2xl shadow-xl shadow-emerald-900/20"
               size="lg"
               icon={
@@ -149,7 +149,7 @@ export const DashboardPage: React.FC = () => {
               {t('entry.new_title')}
             </Button>
             <Button
-              onClick={() => navigate('/operator/issues/new')}
+              onClick={() => navigate('/issues/new')}
               className="flex-1 !bg-red-500/10 backdrop-blur-md !text-white dark:!text-red-400 !font-black !rounded-2xl border-2 border-white/20 dark:border-red-500/20"
               size="lg"
               icon={
@@ -207,7 +207,7 @@ export const DashboardPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div
                   className="bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/20 col-span-2 flex justify-between items-center cursor-pointer"
-                  onClick={() => navigate('/operator/earnings')}
+                  onClick={() => navigate('/earnings')}
                 >
                   <div>
                     <p className="text-[10px] font-black text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-widest mb-1">Forecasted</p>
@@ -354,7 +354,7 @@ export const DashboardPage: React.FC = () => {
               className="flex items-center justify-between mb-5 px-1"
             >
               <h2 className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-[0.2em]">{t('issue.title')}</h2>
-              <button onClick={() => navigate('/operator/issues')} className="text-[10px] text-red-600 font-black uppercase tracking-widest active:opacity-70 transition-opacity">
+              <button onClick={() => navigate('/issues')} className="text-[10px] text-red-600 font-black uppercase tracking-widest active:opacity-70 transition-opacity">
                 {t('dashboard.view_all')}
               </button>
             </motion.div>
@@ -381,7 +381,7 @@ export const DashboardPage: React.FC = () => {
             className="flex items-center justify-between mb-5 px-1"
           >
             <h2 className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em]">{t('dashboard.recent')}</h2>
-            <button onClick={() => navigate('/operator/entries')} className="text-[10px] text-emerald-600 dark:text-emerald-500 font-black uppercase tracking-widest active:opacity-70 transition-opacity">
+            <button onClick={() => navigate('/entries')} className="text-[10px] text-emerald-600 dark:text-emerald-500 font-black uppercase tracking-widest active:opacity-70 transition-opacity">
               {t('dashboard.view_all')}
             </button>
           </motion.div>
@@ -394,7 +394,7 @@ export const DashboardPage: React.FC = () => {
                 title="No productions yet"
                 message="Create your first production to get started."
                 action={
-                  <Button size="sm" onClick={() => navigate('/operator/entries/new')}>
+                  <Button size="sm" onClick={() => navigate('/entries/new')}>
                     Create Production
                   </Button>
                 }

@@ -38,15 +38,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         return;
       }
 
-      if (profile.active === false) {
+      if (!profile.active) {
         await logoutService();
         set({ loading: false, error: 'Account is inactive. Contact your administrator.' });
         return;
       }
 
-      if (!['operator', 'employee', 'admin'].includes(profile.role)) {
+      if (!['operator', 'employee'].includes(profile.role)) {
         await logoutService();
-        set({ loading: false, error: 'Access denied. You do not have permissions for this app.' });
+        set({ loading: false, error: 'Access denied. This app is for operators only.' });
         return;
       }
 
@@ -72,7 +72,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       if (user) {
         try {
           const profile = await getUserProfile(user.uid);
-          if (profile && profile.active !== false && ['operator', 'employee', 'admin'].includes(profile.role)) {
+          if (profile && profile.active && ['operator', 'employee'].includes(profile.role)) {
             set({ user, profile, loading: false, initialized: true });
           } else {
             await logoutService();

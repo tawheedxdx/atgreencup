@@ -191,6 +191,52 @@ export interface Earning {
   paymentNote?: string;
 }
 
+export interface SalarySlipMachineSummary {
+  machineNo: string;
+  productName: string;
+  boxQuantity: number;
+  totalPackets: number;
+  pcs: number;
+  rateAmount: number;
+  calculatedAmount: number;
+}
+
+export interface SalarySlip {
+  id?: string;
+  slipNumber: string;
+  operatorUid: string;
+  operatorName: string;
+  employeeId: string;
+  salaryPeriod?: string;
+  generatedDate?: string;
+  fromDate?: string;
+  toDate?: string;
+  generatedAt?: string;
+  paymentStatus: 'paid' | 'pending' | 'rejected';
+  status?: string;
+  machines?: SalarySlipMachineSummary[];
+  items?: {
+    machineNo: string;
+    productName: string;
+    box: number;
+    totalPackets: number;
+    pcs: number;
+    rate: string | number;
+    amount: number;
+  }[];
+  totalBoxes: number;
+  totalPackets: number;
+  totalPcs?: number;
+  totalPCS?: number;
+  grossEarnings?: number;
+  grossAmount?: number;
+  roundOff: number;
+  finalAmount: number;
+  pdfUrl?: string;
+  createdAt: Timestamp | null;
+  updatedAt: Timestamp | null;
+}
+
 // ─── Auth ────────────────────────────────────────────────────
 export interface AuthState {
   user: import('firebase/auth').User | null;
