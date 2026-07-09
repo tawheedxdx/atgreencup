@@ -15,7 +15,6 @@ import { Button } from '../../components/ui/Button';
 import { LoadingView } from '../../components/feedback/LoadingView';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { PageTransition } from '../../components/layout/PageTransition';
-import { AdSenseBanner } from '../../components/ui/AdSenseBanner';
 import type { ProductionEntry, IssueReport } from '../../types';
 
 const containerVariants: Variants = {
@@ -415,11 +414,6 @@ export const DashboardPage: React.FC = () => {
               ))}
             </motion.div>
           )}
-        </section>
-
-        {/* AdSense Monetization Banner */}
-        <section className="mt-8">
-          <AdSenseBanner />
         </section>
       </div>
     </PageTransition>
